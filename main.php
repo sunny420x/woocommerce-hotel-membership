@@ -1,0 +1,217 @@
+<?php
+/**
+ * Plugin Name: Membership System For WooCommerce
+ * Description: มอบคะแนนสะสมให้ลูกค้า 1 คะแนน ต่อทุกยอดซื้อ 500 บาท สำหรับแลกคูปองส่วนลด
+ * Version: 1.0
+ * Author: Jirakit Pawnsakunrungrot
+ * Author URI: https://www.linkedin.com/in/sunny-jirakit
+ * Plugin URI: https://github.com/sunny420x/woocommerce-membership
+ */
+
+if ( ! defined( 'ABSPATH' ) ) exit;
+
+// ฟังก์ชันคำนวณและเพิ่มคะแนนเมื่อออเดอร์เสร็จสมบูรณ์
+add_action( 'woocommerce_order_status_completed', 'add_points_after_purchase', 10, 1 );
+
+function add_points_after_purchase( $order_id ) {
+    global $wpdb;
+    
+    $order = wc_get_order( $order_id );
+    
+    // --- จุดที่ 1: กันคะแนนเบิ้ล ---
+    // เช็คว่าออเดอร์นี้เคยให้คะแนนไปหรือยัง
+    if ( $order->get_meta('_points_added_to_score') === 'yes' ) {
+        return;
+    }
+
+    // --- จุดที่ 2: หาตัวตนจาก Email (เผื่อซื้อแบบ Guest) ---
+    $billing_email = $order->get_billing_email();
+    $user = get_user_by( 'email', $billing_email );
+
+    if ( ! $user ) return; // ถ้าไม่มี User ในระบบเลยจริงๆ ถึงค่อยข้าม
+
+    $user_id = $user->ID;
+    $order_total = $order->get_total(); // หรือใช้ $order->get_subtotal() ถ้าไม่รวมค่าส่ง
+    $points_earned = floor( $order_total / 500 );
+
+    if ( $points_earned > 0 ) {
+        $table_name = $wpdb->prefix . 'users';
+        
+        // บังคับบวกคะแนน
+        $wpdb->query( $wpdb->prepare(
+            "UPDATE $table_name SET score = score + %d WHERE ID = %d",
+            $points_earned,
+            $user_id
+        ));
+
+        // --- จุดที่ 3: บันทึกไว้ว่าให้คะแนนแล้ว ---
+        $order->update_meta_data( '_points_added_to_score', 'yes' );
+        $order->save();
+
+        $order->add_order_note( sprintf( 'เพิ่มคะแนน %d ลงในคอลัมน์ score (User ID: %d)', $points_earned, $user_id ) );
+    }
+}
+
+// (Optional) แสดงคะแนนในหน้า My Account ของลูกค้า
+add_action( 'woocommerce_before_my_account', 'display_customer_points' );
+
+function display_customer_points() {
+    $user_id = get_current_user_id();
+    global $wpdb;
+    $points = (int) $wpdb->get_var( $wpdb->prepare(
+        "SELECT score FROM {$wpdb->prefix}users WHERE ID = %d",
+        $user_id
+    ) );
+
+    // คำนวณความกว้างของ Progress Bar (สมมติเป้าหมายสูงสุดที่ 30 คะแนน)
+    $max_points = 30;
+    $percentage = ($points / $max_points) * 100;
+    if ($percentage > 100) $percentage = 100;
+
+    // กำหนดสีตามช่วงคะแนน
+    $bar_color = '#CCC';
+    if ($points > 0) $bar_color = '#1D9DD8'; // Silver
+    if ($points >= 10) $bar_color = '#FF9900'; // Gold
+    if ($points >= 20) $bar_color = '#106DBA'; // Platinum
+
+    ?>
+    <style>
+        .rewards-container {
+            font-family: 'Kanit';
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .points-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 15px;
+        }
+        .points-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: <?php echo $bar_color; ?>;
+        }
+        .progress-track {
+            position: relative;
+            width: 100%;
+            height: 12px;
+            background: #eee;
+            border-radius: 10px;
+            margin: 25px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: <?php echo $bar_color; ?>;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        .milestones {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: space-between;
+        }
+        .dot {
+            width: 18px;
+            height: 18px;
+            background: #fff;
+            border: 3px solid #eee;
+            border-radius: 50%;
+            margin-top: -3px;
+            position: relative;
+        }
+        .dot.active {
+            border-color: <?php echo $bar_color; ?>;
+        }
+        .dot-label {
+            position: absolute;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            font-weight: bold;
+            color: #666;
+        }
+    </style>
+
+    <div class="rewards-container">
+        <div class="points-header">
+            <div>
+                <span style="display:block; color:#888; font-size:14px;">คะแนนสะสมของคุณ (ซื้อครบ 500 บาท = 1 คะแนน)</span>
+                <span class="points-value"><?php echo number_format($points); ?></span> <small>คะแนน</small>
+            </div>
+            <div style="text-align: right; font-size: 12px; color: #aaa;">
+            <?php 
+            if($points < 10) echo "อีก " . (10 - $points) . " คะแนนเพื่อเป็นระดับ Silver และรับส่วนลด 1% เมื่อซื้อสินค้าผ่านเว็บไซต์";
+            elseif($points < 20) echo "อีก " . (20 - $points) . " คะแนนเพื่อเป็นระดับ Gold และรับส่วนลด 2% เมื่อซื้อสินค้าผ่านเว็บไซต์";
+            elseif($points < 30) echo "อีก " . (30 - $points) . " คะแนนเพื่อเป็นระดับ Platinum และรับส่วนลด 3% เมื่อซื้อสินค้าผ่านเว็บไซต์";
+            else echo "คุณอยู่ในระดับสูงสุด Platinum เรียบร้อยแล้ว!";
+            ?>
+            </div>
+        </div>
+
+        <div class="progress-track">
+            <div class="progress-fill" style="width: <?php echo $percentage; ?>%;"></div>
+            <div class="milestones">
+                <div class="dot active"><span class="dot-label">0</span></div>
+                <div class="dot <?php echo ($points >= 10) ? 'active' : ''; ?>" style="left: 33.33%; position: absolute;"><span class="dot-label">10</span></div>
+                <div class="dot <?php echo ($points >= 20) ? 'active' : ''; ?>" style="left: 66.66%; position: absolute;"><span class="dot-label">20</span></div>
+                <div class="dot <?php echo ($points >= 30) ? 'active' : ''; ?>" style="right: 0; position: absolute;"><span class="dot-label">30+</span></div>
+            </div>
+        </div>
+        <div style="margin-top: 40px; font-size: 13px; color: #666; text-align: center;">
+
+        </div>
+    </div>
+    <?php
+}
+
+/**
+ * คำนวณส่วนลดตามคะแนน (Level) ของลูกค้าที่หน้า Checkout
+ */
+add_action( 'woocommerce_cart_calculate_fees', 'apply_tier_discount_based_on_score', 20, 1 );
+
+function apply_tier_discount_based_on_score( $cart ) {
+    if ( is_admin() && ! defined( 'DOING_AJAX' ) ) return;
+
+    // ดึง User ID ของคนที่กำลังจะซื้อ
+    $user_id = get_current_user_id();
+    if ( ! $user_id ) return; // ถ้าเป็น Guest ไม่ได้ส่วนลด
+
+    global $wpdb;
+    
+    // 1. ดึงคะแนนจากคอลัมน์ score ในตาราง wpln_users
+    $score = (int) $wpdb->get_var( $wpdb->prepare(
+        "SELECT score FROM {$wpdb->prefix}users WHERE ID = %d",
+        $user_id
+    ) );
+
+    // 2. กำหนดเงื่อนไขส่วนลด (Logic: 10 แต้ม = 1%, 20 แต้ม = 2%, 30 แต้ม = 3%)
+    $discount_percentage = 0;
+
+    if ( $score >= 30 ) {
+        $discount_percentage = 0.03; // 3%
+        $level_name = "Platinum Membership (3%)";
+    } elseif ( $score >= 20 ) {
+        $discount_percentage = 0.02; // 2%
+        $level_name = "Gold Membership (2%)";
+    } elseif ( $score >= 10 ) {
+        $discount_percentage = 0.01; // 1%
+        $level_name = "Silver Membership (1%)";
+    }
+
+    // 3. ถ้ามีส่วนลด ให้คำนวณยอดแล้วหักออก
+    if ( $discount_percentage > 0 ) {
+        // คำนวณจากราคาสินค้ารวมในตะกร้า (ไม่รวมภาษี/ค่าส่ง หรือจะใช้ get_subtotal ก็ได้)
+        $discount_amount = $cart->get_subtotal() * $discount_percentage;
+
+        // บรรทัดนี้จะเพิ่มรายการส่วนลดเข้าไปในหน้า Checkout (ค่าติดลบเพื่อให้เป็นส่วนลด)
+        $cart->add_fee( __( 'ส่วนลดพิเศษ: ' . $level_name, 'woocommerce' ), -$discount_amount );
+    }
+}
