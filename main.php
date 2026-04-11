@@ -10,6 +10,76 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
+add_action('admin_menu', 'worldchem_membership_menu');
+
+function worldchem_membership_menu() {
+    add_menu_page(
+        'Membership Settings', // Title ของหน้า
+        'ระบบ Membership', // ชื่อเมนูที่โชว์ในแถบข้าง
+        'manage_options', //สิทธิ์การเข้าถึง (Admin)
+        'woocommerce-membership-settings', // Slug ของหน้า
+        'woocommerce_membership_setting_page', // ฟังก์ชันที่ใช้พ่น HTML หน้า Setting
+        'dashicons-admin-users', // ไอคอน
+        '80' // ตำแหน่งเมนู
+    );
+}
+
+function woocommerce_membership_setting_page() {
+    ?>
+    <div class="wrap">
+        <h1>ตั้งค่าระดับ Membership</h1>
+        <hr>
+        <form action="options.php" method="post">
+            <?php
+            settings_fields('membership_settings_group');
+            ?>
+            <table class="wp-list-table widefat fixed striped" style="margin-top: 20px;">
+                <thead>
+                    <tr>
+                        <th>Membership Level</th>
+                        <th>Minimum Score (คะแนนขั้นต่ำ)</th>
+                        <th>Discount Percentage (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Platinum Membership</strong></td>
+                        <td><input type="number" name="ms_platinum_score" value="<?php echo esc_attr(get_option('ms_platinum_score', 30)); ?>" /></td>
+                        <td><input type="number" step="0.01" name="ms_platinum_discount" value="<?php echo esc_attr(get_option('ms_platinum_discount', 3)); ?>" /> %</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Gold Membership</strong></td>
+                        <td><input type="number" name="ms_gold_score" value="<?php echo esc_attr(get_option('ms_gold_score', 20)); ?>" /></td>
+                        <td><input type="number" step="0.01" name="ms_gold_discount" value="<?php echo esc_attr(get_option('ms_gold_discount', 2)); ?>" /> %</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Silver Membership</strong></td>
+                        <td><input type="number" name="ms_silver_score" value="<?php echo esc_attr(get_option('ms_silver_score', 10)); ?>" /></td>
+                        <td><input type="number" step="0.01" name="ms_silver_discount" value="<?php echo esc_attr(get_option('ms_silver_discount', 1)); ?>" /> %</td>
+                    </tr>
+                </tbody>
+            </table>
+            <?php submit_button('บันทึกเกณฑ์คะแนน'); ?>
+        </form>
+    </div>
+    <?php
+}
+
+add_action('admin_init', 'membership_tier_settings_init');
+
+function membership_tier_settings_init() {
+    // ลงทะเบียนค่าสำหรับแต่ละ Tier
+    // Platinum
+    register_setting('membership_settings_group', 'ms_platinum_score');
+    register_setting('membership_settings_group', 'ms_platinum_discount');
+    // Gold
+    register_setting('membership_settings_group', 'ms_gold_score');
+    register_setting('membership_settings_group', 'ms_gold_discount');
+    // Silver
+    register_setting('membership_settings_group', 'ms_silver_score');
+    register_setting('membership_settings_group', 'ms_silver_discount');
+}
+
 // ฟังก์ชันคำนวณและเพิ่มคะแนนเมื่อออเดอร์เสร็จสมบูรณ์
 add_action( 'woocommerce_order_status_completed', 'add_points_after_purchase', 10, 1 );
 
@@ -195,15 +265,28 @@ function apply_tier_discount_based_on_score( $cart ) {
     // 2. กำหนดเงื่อนไขส่วนลด (Logic: 10 แต้ม = 1%, 20 แต้ม = 2%, 30 แต้ม = 3%)
     $discount_percentage = 0;
 
-    if ( $score >= 30 ) {
-        $discount_percentage = 0.03; // 3%
-        $level_name = "Platinum Membership (3%)";
-    } elseif ( $score >= 20 ) {
-        $discount_percentage = 0.02; // 2%
-        $level_name = "Gold Membership (2%)";
-    } elseif ( $score >= 10 ) {
-        $discount_percentage = 0.01; // 1%
-        $level_name = "Silver Membership (1%)";
+    $p_score    = get_option('ms_platinum_score', 30);
+    $p_discount = get_option('ms_platinum_discount', 3) / 100; // หาร 100 เพราะเก็บเป็นเลขจำนวนเต็ม
+
+    $g_score    = get_option('ms_gold_score', 20);
+    $g_discount = get_option('ms_gold_discount', 2) / 100;
+
+    $s_score    = get_option('ms_silver_score', 10);
+    $s_discount = get_option('ms_silver_discount', 1) / 100;
+
+    // Logic การเช็คระดับ
+    if ( $score >= $p_score ) {
+        $discount_percentage = $p_discount;
+        $level_name = "Platinum Membership (" . (get_option('ms_platinum_discount', 3)) . "%)";
+    } elseif ( $score >= $g_score ) {
+        $discount_percentage = $g_discount;
+        $level_name = "Gold Membership (" . (get_option('ms_gold_discount', 2)) . "%)";
+    } elseif ( $score >= $s_score ) {
+        $discount_percentage = $s_discount;
+        $level_name = "Silver Membership (" . (get_option('ms_silver_discount', 1)) . "%)";
+    } else {
+        $discount_percentage = 0;
+        $level_name = "General Member";
     }
 
     // 3. ถ้ามีส่วนลด ให้คำนวณยอดแล้วหักออก
