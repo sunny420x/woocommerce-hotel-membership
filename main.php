@@ -60,7 +60,6 @@ function woocommerce_membership_setting_page() {
                 </tbody>
             </table>
             <?php submit_button('บันทึกเกณฑ์คะแนน'); ?>
-            <hr>
             <?php
             function getMemberShipLevel($score) {
                 if($score >= (int) get_option('ms_platinum_score', 30)) {
@@ -103,7 +102,6 @@ function woocommerce_membership_setting_page() {
                     ?>
                 </tbody>
             </table>
-            <hr>
             <p>Github Repository: <a href="https://github.com/sunny420x/woocommerce-membership" target="_blank">github.com/sunny420x/woocommerce-membership</a></p>
         </form>
     </div>
