@@ -26,7 +26,7 @@ function worldchem_membership_menu() {
 
 function woocommerce_membership_setting_page() {
     ?>
-    <div class="wrap">
+    <div class="wrap" style="background: #fff; padding: 20px; border-radius: 10px; margin-top: 20px;">
         <h1>ตั้งค่าระดับ Membership</h1>
         <hr>
         <form action="options.php" method="post">
