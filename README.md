@@ -1,3 +1,5 @@
+<img width="1682" height="193" alt="image" src="https://github.com/user-attachments/assets/43dc449e-c394-42e3-9f01-367fa56cce0c" />
+
 # ระบบ Membership สำหรับ WooCommerce
 เป็นระบบ Membership สะสมคะแนนจากการซื้อสินค้า เพื่อรับส่วนลดตลอดชีพ ตามลำดับต่าง ๆ ที่ตั้งค่าไว้ โดยทุกเงื่อนไขสามารถปรับเปลี่ยนในได้หน้าตั้งค่าของปลั้กอิน
 
