@@ -119,6 +119,30 @@ function woocommerce_membership_setting_page()
                     </tr>
                 </tbody>
             </table>
+            <h1>ส่วนลดสำหรับสินค้าพิเศษ</h1>
+            <hr>
+            <table class="wp-list-table widefat fixed striped" style="margin-top: 20px;">
+                <thead>
+                    <tr>
+                        <th>Membership Level</th>
+                        <th>Discount Percentage (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Silver Membership</strong></td>
+                        <td><input type="number" name="member-privileges-silver" value="<?php echo esc_attr(get_option('member-privileges-silver', 10)); ?>" /></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Gold Membership</strong></td>
+                        <td><input type="number" name="member-privileges-gold" value="<?php echo esc_attr(get_option('member-privileges-gold', 20)); ?>" /></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Platinum Membership</strong></td>
+                        <td><input type="number" name="member-privileges-platinum" value="<?php echo esc_attr(get_option('member-privileges-platinum', 30)); ?>" /></td>
+                    </tr>
+                </tbody>
+            </table>
             <?php submit_button('บันทึกเกณฑ์คะแนน'); ?>
             <?php
             function getMemberShipLevel($score)
@@ -185,6 +209,10 @@ function membership_tier_settings_init()
     // Silver
     register_setting('membership_settings_group', 'ms_silver_score');
     register_setting('membership_settings_group', 'ms_silver_discount');
+
+    register_setting('membership_settings_group', 'member-privileges-silver');
+    register_setting('membership_settings_group', 'member-privileges-gold');
+    register_setting('membership_settings_group', 'member-privileges-platinum');
 }
 
 // ฟังก์ชันคำนวณและเพิ่มคะแนนเมื่อออเดอร์เสร็จสมบูรณ์
@@ -328,9 +356,9 @@ function display_customer_points()
             </div>
             <div style="text-align: right; font-size: 12px; color: #aaa;">
                 <?php
-                    if($points < 10) echo "อีก " . (10 - $points) . " คะแนนเพื่อเป็นระดับ Silver และรับส่วนลด 1% เมื่อซื้อสินค้าผ่านเว็บไซต์";
-                    elseif($points < 20) echo "อีก " . (20 - $points) . " คะแนนเพื่อเป็นระดับ Gold และรับส่วนลด 2% เมื่อซื้อสินค้าผ่านเว็บไซต์";
-                    elseif($points < 30) echo "อีก " . (30 - $points) . " คะแนนเพื่อเป็นระดับ Platinum และรับส่วนลด 3% เมื่อซื้อสินค้าผ่านเว็บไซต์";
+                    if($points < get_option('ms_silver_score', 10)) echo "อีก " . (10 - $points) . " คะแนนเพื่อเป็นระดับ Silver และรับส่วนลด 1% เมื่อซื้อสินค้าผ่านเว็บไซต์";
+                    elseif($points < get_option('ms_gold_score', 20)) echo "อีก " . (20 - $points) . " คะแนนเพื่อเป็นระดับ Gold และรับส่วนลด 2% เมื่อซื้อสินค้าผ่านเว็บไซต์";
+                    elseif($points < get_option('ms_platinum_score', 30)) echo "อีก " . (30 - $points) . " คะแนนเพื่อเป็นระดับ Platinum และรับส่วนลด 3% เมื่อซื้อสินค้าผ่านเว็บไซต์";
                     else echo "คุณอยู่ในระดับสูงสุด Platinum เรียบร้อยแล้ว!";
                 ?>
             </div>
@@ -340,9 +368,9 @@ function display_customer_points()
             <div class="progress-fill" style="width: <?php echo $percentage; ?>%;"></div>
             <div class="milestones">
                 <div class="dot active"><span class="dot-label">0</span></div>
-                <div class="dot <?php echo ($points >= 10) ? 'active' : ''; ?>" style="left: 33.33%; position: absolute;"><span class="dot-label">10</span></div>
-                <div class="dot <?php echo ($points >= 20) ? 'active' : ''; ?>" style="left: 66.66%; position: absolute;"><span class="dot-label">20</span></div>
-                <div class="dot <?php echo ($points >= 30) ? 'active' : ''; ?>" style="right: 0; position: absolute;"><span class="dot-label">30+</span></div>
+                <div class="dot <?php echo ($points >= get_option('ms_silver_score', 10)) ? 'active' : ''; ?>" style="left: 33.33%; position: absolute;"><span class="dot-label">10</span></div>
+                <div class="dot <?php echo ($points >= get_option('ms_gold_score', 20)) ? 'active' : ''; ?>" style="left: 66.66%; position: absolute;"><span class="dot-label">20</span></div>
+                <div class="dot <?php echo ($points >= get_option('ms_platinum_score', 30)) ? 'active' : ''; ?>" style="right: 0; position: absolute;"><span class="dot-label">30+</span></div>
             </div>
         </div>
         <div style="margin-top: 40px; font-size: 13px; color: #666; text-align: center;">
@@ -606,3 +634,133 @@ function wcm_update_redeem_status_on_apply( $coupon_code ) {
         array( '%s' )  // Format ของเงื่อนไข
     );
 }
+
+/**
+ * สร้างสถานะสินค้าลดราคาสำหรับสมาชิก
+ */
+add_filter('woocommerce_product_is_on_sale', 'member_check_is_on_sale', 10, 2);
+function member_check_is_on_sale($is_on_sale, $product) {
+    if (!is_user_logged_in()) return $is_on_sale;
+
+    $special_categories = array('member-privileges');
+    if (has_term($special_categories, 'product_cat', $product->get_id())) {
+        return true;
+    }
+    return $is_on_sale;
+}
+
+function getUserLevel($option) {
+    global $wpdb;
+    $user_id = get_current_user_id();
+
+    // 1. ดึงคะแนนจากตาราง users
+    $user_score = (int) $wpdb->get_var($wpdb->prepare(
+        "SELECT score FROM {$wpdb->prefix}users WHERE ID = %d",
+        $user_id
+    ));
+
+    // 2. เช็คระดับสมาชิก (เรียงจากระดับสูงสุดลงมา)
+    if ($user_score >= get_option('ms_platinum_score', 30)) {
+        $level_name = "platinum";
+    } 
+    elseif ($user_score >= get_option('ms_gold_score', 20)) {
+        $level_name = "gold";
+    } 
+    elseif ($user_score >= get_option('ms_silver_score', 10)) {
+        $level_name = "silver";
+    } 
+    else {
+        return;
+    }
+
+    $discount_percent = get_option("member-privileges-$level_name", 0);
+
+    if($option == "percent") {
+        return  1 - ($discount_percent / 100);
+    } else {
+        return $level_name;
+    }
+}
+
+/**
+ * 2. คำนวณราคาพิเศษ และแสดงผลแบบ ขีดฆ่า (Price HTML)
+ */
+add_filter('woocommerce_get_price_html', 'member_display_custom_price_html', 10, 2);
+function member_display_custom_price_html($price_html, $product) {
+    if (!is_user_logged_in() || is_admin()) return $price_html;
+    
+    $special_categories = array('member-privileges'); 
+
+    if (has_term($special_categories, 'product_cat', $product->get_id())) {
+        $regular_price = $product->get_regular_price();
+        
+        $discount_rate = getUserLevel('percent'); 
+        if ($discount_rate >= 1) return $price_html;
+
+        $sale_price = (float)$regular_price * $discount_rate;
+
+        // สร้าง HTML แบบขีดฆ่าสไตล์ WooCommerce
+        $price_html = '<del aria-hidden="true">' . wc_price($regular_price) . '</del> ';
+        $price_html .= '<ins>' . wc_price($sale_price) . '</ins>';
+        $price_html .= ' <span class="member-tag" style="font-size:12px; color:#27ae60; display:block; margin-top: 10px;">(ราคาพิเศษสำหรับสมาชิก '. ucfirst(getUserLevel('name')) .')</span>';
+    }
+
+    return $price_html;
+}
+
+/**
+ * 3. บังคับราคาในตะกร้าสินค้า (เวอร์ชันปรับปรุงให้แม่นยำขึ้น)
+ */
+add_action('woocommerce_before_calculate_totals', function($cart) {
+    if (is_admin() && !defined('DOING_AJAX')) return;
+    if (!is_user_logged_in()) return;
+
+    // กำหนด Slug ของหมวดหมู่
+    $wcm_target_slugs = array( 'member-privileges' ); 
+    $discount_rate = getUserLevel('percent');
+
+    foreach ($cart->get_cart() as $cart_item_key => $cart_item) {
+        $product = $cart_item['data'];
+        $product_id = $product->get_id();
+
+        // ตรวจสอบหมวดหมู่
+        if (has_term($wcm_target_slugs, 'product_cat', $product_id)) {
+            $regular_price = (float)$product->get_regular_price();
+            $special_price = $regular_price * $discount_rate;
+
+            // บังคับราคาใหม่ลงใน Object ของสินค้าที่อยู่ในตะกร้า
+            $cart_item['data']->set_price($special_price);
+            $cart_item['data']->set_sale_price($special_price);
+        }
+    }
+}, 20);
+
+/**
+ * บังคับให้แสดงป้ายเปอร์เซ็นต์ส่วนลดสมาชิก ในโครงสร้าง HTML ของธีม
+ */
+add_filter('woocommerce_sale_flash', 'member_custom_sale_badge', 10, 3);
+
+function member_custom_sale_badge($html, $post, $product) {
+    // 1. เช็คว่าล็อกอินไหม
+    if (!is_user_logged_in()) return $html;
+
+    // 2. กำหนดหมวดหมู่เป้าหมาย (ให้ตรงกับที่ใช้ในส่วนราคา)
+    $target_slugs = array( 'สิทธิพิเศษสำหรับสมาชิก' ); 
+    $discount_rate = getUserLevel('percent');
+    if ($discount_rate >= 1) return $html;
+    
+    // 3. เช็คว่าอยู่ในหมวดไหม
+    if (has_term($target_slugs, 'product_cat', $product->get_id())) {
+        return '<div class="product-lable">
+                    <div class="onsale">'.((1 - $discount_rate) * 100).'%</div>
+                </div>';
+    }
+
+    return $html;
+}
+
+add_filter('woocommerce_product_is_on_sale', function($is_on_sale, $product) {
+    if (!is_user_logged_in()) return $is_on_sale;
+    $wcm_target_slugs = array( 'สิทธิพิเศษสำหรับสมาชิก' ); 
+    return has_term($wcm_target_slugs, 'product_cat', $product->get_id()) ? true : $is_on_sale;
+}, 10, 2);
