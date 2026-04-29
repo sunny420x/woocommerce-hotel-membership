@@ -8,11 +8,14 @@
  * Plugin URI: https://github.com/sunny420x/woocommerce-membership
  */
 
-if ( ! defined( 'ABSPATH' ) ) exit;
+if (!defined('ABSPATH'))
+    exit;
 
+//Install Menu.
 add_action('admin_menu', 'worldchem_membership_menu');
 
-function worldchem_membership_menu() {
+function worldchem_membership_menu()
+{
     add_menu_page(
         'Membership Settings', // Title ของหน้า
         'ระบบ Membership', // ชื่อเมนูที่โชว์ในแถบข้าง
@@ -24,24 +27,58 @@ function worldchem_membership_menu() {
     );
 }
 
-register_activation_hook( __FILE__, 'my_plugin_install' );
+register_activation_hook( __FILE__, 'worldchem_plugin_install' );
 
-function my_plugin_install() {
+function worldchem_plugin_install() {
     global $wpdb;
 
     $user_table = $wpdb->prefix . 'users';
+    $redeem_table = $wpdb->prefix . 'redeem_history';
+    $charset_collate = $wpdb->get_charset_collate();
 
-    $row = $wpdb->get_results("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
-        WHERE TABLE_SCHEMA = '".DB_NAME."' 
-        AND TABLE_NAME = '$user_table' 
-        AND COLUMN_NAME = 'score'");
+    require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
-    if (empty($row)) {
-        $wpdb->query("ALTER TABLE $user_table `score` INT(12) DEFAULT 0;");
-    }
+    // 1. เพิ่ม Column 'score' ในตาราง users (ถ้ายังไม่มี)
+    // dbDelta จะตรวจสอบโครงสร้างตารางเดิมให้เอง
+    $sql_user = "CREATE TABLE $user_table (
+        ID bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+        score int(12) DEFAULT 0 NOT NULL,
+        PRIMARY KEY  (ID)
+    ) $charset_collate;";
+    
+    // 2. สร้างตาราง redeem_history
+    $sql_history = "CREATE TABLE $redeem_table (
+        id bigint(20) NOT NULL AUTO_INCREMENT,
+        user_id bigint(20) NOT NULL,
+        coupon_code varchar(50) NOT NULL,
+        points_used int(11) NOT NULL,
+        status varchar(20) DEFAULT 'unused' NOT NULL,
+        created_at datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        PRIMARY KEY  (id),
+        KEY user_id (user_id)
+    ) $charset_collate;";
+
+    // รัน dbDelta เพื่ออัปเดต/สร้างตาราง
+    dbDelta( $sql_user );
+    dbDelta( $sql_history );
 }
 
-function woocommerce_membership_setting_page() {
+//Serve Styling.
+function worldchem_enqueue_assets()
+{
+    wp_enqueue_style(
+        'worldchem-membership-style',
+        plugins_url('/css/membership.css', __FILE__),
+        array(),
+        time(),
+        'all'
+    );
+}
+// ลบ add_action ตัวเก่าออกด้วย แล้วใช้ตัวนี้แทน
+add_action('wp_enqueue_scripts', 'worldchem_enqueue_assets');
+
+function woocommerce_membership_setting_page()
+{
     ?>
     <div class="wrap" style="background: #fff; padding: 20px; border-radius: 10px; margin-top: 20px;">
         <h1>ตั้งค่าระดับ Membership</h1>
@@ -61,29 +98,36 @@ function woocommerce_membership_setting_page() {
                 <tbody>
                     <tr>
                         <td><strong>Platinum Membership</strong></td>
-                        <td><input type="number" name="ms_platinum_score" value="<?php echo esc_attr(get_option('ms_platinum_score', 30)); ?>" /></td>
-                        <td><input type="number" step="0.01" name="ms_platinum_discount" value="<?php echo esc_attr(get_option('ms_platinum_discount', 3)); ?>" /> %</td>
+                        <td><input type="number" name="ms_platinum_score"
+                                value="<?php echo esc_attr(get_option('ms_platinum_score', 30)); ?>" /></td>
+                        <td><input type="number" step="0.01" name="ms_platinum_discount"
+                                value="<?php echo esc_attr(get_option('ms_platinum_discount', 3)); ?>" /> %</td>
                     </tr>
                     <tr>
                         <td><strong>Gold Membership</strong></td>
-                        <td><input type="number" name="ms_gold_score" value="<?php echo esc_attr(get_option('ms_gold_score', 20)); ?>" /></td>
-                        <td><input type="number" step="0.01" name="ms_gold_discount" value="<?php echo esc_attr(get_option('ms_gold_discount', 2)); ?>" /> %</td>
+                        <td><input type="number" name="ms_gold_score"
+                                value="<?php echo esc_attr(get_option('ms_gold_score', 20)); ?>" /></td>
+                        <td><input type="number" step="0.01" name="ms_gold_discount"
+                                value="<?php echo esc_attr(get_option('ms_gold_discount', 2)); ?>" /> %</td>
                     </tr>
                     <tr>
                         <td><strong>Silver Membership</strong></td>
-                        <td><input type="number" name="ms_silver_score" value="<?php echo esc_attr(get_option('ms_silver_score', 10)); ?>" /></td>
-                        <td><input type="number" step="0.01" name="ms_silver_discount" value="<?php echo esc_attr(get_option('ms_silver_discount', 1)); ?>" /> %</td>
+                        <td><input type="number" name="ms_silver_score"
+                                value="<?php echo esc_attr(get_option('ms_silver_score', 10)); ?>" /></td>
+                        <td><input type="number" step="0.01" name="ms_silver_discount"
+                                value="<?php echo esc_attr(get_option('ms_silver_discount', 1)); ?>" /> %</td>
                     </tr>
                 </tbody>
             </table>
             <?php submit_button('บันทึกเกณฑ์คะแนน'); ?>
             <?php
-            function getMemberShipLevel($score) {
-                if($score >= (int) get_option('ms_platinum_score', 30)) {
+            function getMemberShipLevel($score)
+            {
+                if ($score >= (int) get_option('ms_platinum_score', 30)) {
                     return "Platinum";
-                } else if($score >= (int) get_option('ms_gold_score', 20)) {
+                } else if ($score >= (int) get_option('ms_gold_score', 20)) {
                     return "Gold";
-                } else if($score >= (int) get_option('ms_silver_score', 10)) { 
+                } else if ($score >= (int) get_option('ms_silver_score', 10)) {
                     return "Silver";
                 } else {
                     return "-";
@@ -103,23 +147,25 @@ function woocommerce_membership_setting_page() {
                 <tbody>
                     <?php
                     global $wpdb;
-                    $results = $wpdb->get_results( "SELECT display_name,user_email,ID,score FROM {$wpdb->prefix}users WHERE score > 0 ORDER BY score DESC" );
+                    $results = $wpdb->get_results("SELECT display_name,user_email,ID,score FROM {$wpdb->prefix}users WHERE score > 0 ORDER BY score DESC");
 
-                    foreach ( $results as $row ) {
-                    ?>
-                    <tr>
-                        <td><?=$row->ID;?></td>
-                        <td><?=$row->display_name;?></td>
-                        <td><a href="/wp-admin/edit.php?s=<?=$row->user_email?>&post_status=all&post_type=shop_order&action=-1&m=0&_created_via&_customer_user&paged=1&action2=-1" target="_blank"><?=$row->user_email;?></a></td>
-                        <td><?=$row->score;?></td>
-                        <td><?=getMemberShipLevel($row->score);?></td>
-                    </tr>
-                    <?php
+                    foreach ($results as $row) {
+                        ?>
+                        <tr>
+                            <td><?= $row->ID; ?></td>
+                            <td><?= $row->display_name; ?></td>
+                            <td><a href="/wp-admin/edit.php?s=<?= $row->user_email ?>&post_status=all&post_type=shop_order&action=-1&m=0&_created_via&_customer_user&paged=1&action2=-1"
+                                    target="_blank"><?= $row->user_email; ?></a></td>
+                            <td><?= $row->score; ?></td>
+                            <td><?= getMemberShipLevel($row->score); ?></td>
+                        </tr>
+                        <?php
                     }
                     ?>
                 </tbody>
             </table>
-            <p>Github Repository: <a href="https://github.com/sunny420x/woocommerce-membership" target="_blank">github.com/sunny420x/woocommerce-membership</a></p>
+            <p>Github Repository: <a href="https://github.com/sunny420x/woocommerce-membership"
+                    target="_blank">github.com/sunny420x/woocommerce-membership</a></p>
         </form>
     </div>
     <?php
@@ -127,7 +173,8 @@ function woocommerce_membership_setting_page() {
 
 add_action('admin_init', 'membership_tier_settings_init');
 
-function membership_tier_settings_init() {
+function membership_tier_settings_init()
+{
     // ลงทะเบียนค่าสำหรับแต่ละ Tier
     // Platinum
     register_setting('membership_settings_group', 'ms_platinum_score');
@@ -141,57 +188,60 @@ function membership_tier_settings_init() {
 }
 
 // ฟังก์ชันคำนวณและเพิ่มคะแนนเมื่อออเดอร์เสร็จสมบูรณ์
-add_action( 'woocommerce_order_status_completed', 'add_points_after_purchase', 10, 1 );
+add_action('woocommerce_order_status_completed', 'add_points_after_purchase', 10, 1);
 
-function add_points_after_purchase( $order_id ) {
+function add_points_after_purchase($order_id)
+{
     global $wpdb;
-    
-    $order = wc_get_order( $order_id );
-    
+
+    $order = wc_get_order($order_id);
+
     // --- จุดที่ 1: กันคะแนนเบิ้ล ---
     // เช็คว่าออเดอร์นี้เคยให้คะแนนไปหรือยัง
-    if ( $order->get_meta('_points_added_to_score') === 'yes' ) {
+    if ($order->get_meta('_points_added_to_score') === 'yes') {
         return;
     }
 
     // --- จุดที่ 2: หาตัวตนจาก Email (เผื่อซื้อแบบ Guest) ---
     $billing_email = $order->get_billing_email();
-    $user = get_user_by( 'email', $billing_email );
+    $user = get_user_by('email', $billing_email);
 
-    if ( ! $user ) return; // ถ้าไม่มี User ในระบบเลยจริงๆ ถึงค่อยข้าม
+    if (!$user)
+        return; // ถ้าไม่มี User ในระบบเลยจริงๆ ถึงค่อยข้าม
 
     $user_id = $user->ID;
     $order_total = $order->get_total(); // หรือใช้ $order->get_subtotal() ถ้าไม่รวมค่าส่ง
-    $points_earned = floor( $order_total / 500 );
+    $points_earned = floor($order_total / 500);
 
-    if ( $points_earned > 0 ) {
+    if ($points_earned > 0) {
         $table_name = $wpdb->prefix . 'users';
-        
+
         // บังคับบวกคะแนน
-        $wpdb->query( $wpdb->prepare(
+        $wpdb->query($wpdb->prepare(
             "UPDATE $table_name SET score = score + %d WHERE ID = %d",
             $points_earned,
             $user_id
         ));
 
         // --- จุดที่ 3: บันทึกไว้ว่าให้คะแนนแล้ว ---
-        $order->update_meta_data( '_points_added_to_score', 'yes' );
+        $order->update_meta_data('_points_added_to_score', 'yes');
         $order->save();
 
-        $order->add_order_note( sprintf( 'เพิ่มคะแนน %d ลงในคอลัมน์ score (User ID: %d)', $points_earned, $user_id ) );
+        $order->add_order_note(sprintf('เพิ่มคะแนน %d ลงในคอลัมน์ score (User ID: %d)', $points_earned, $user_id));
     }
 }
 
 // (Optional) แสดงคะแนนในหน้า My Account ของลูกค้า
-add_action( 'woocommerce_before_my_account', 'display_customer_points' );
+add_action('woocommerce_before_my_account', 'display_customer_points');
 
-function display_customer_points() {
+function display_customer_points()
+{
     $user_id = get_current_user_id();
     global $wpdb;
-    $points = (int) $wpdb->get_var( $wpdb->prepare(
+    $points = (int) $wpdb->get_var($wpdb->prepare(
         "SELECT score FROM {$wpdb->prefix}users WHERE ID = %d",
         $user_id
-    ) );
+    ));
 
     // คำนวณความกว้างของ Progress Bar (สมมติเป้าหมายสูงสุดที่ 30 คะแนน)
     $max_points = 30;
@@ -212,7 +262,7 @@ function display_customer_points() {
             padding: 20px;
             background: #fff;
             border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
         }
         .points-header {
             display: flex;
@@ -274,15 +324,15 @@ function display_customer_points() {
         <div class="points-header">
             <div>
                 <span style="display:block; color:#888; font-size:14px;">คะแนนสะสมของคุณ (ซื้อครบ 500 บาท = 1 คะแนน)</span>
-                <span class="points-value"><?php echo number_format($points); ?></span> <small>คะแนน</small>
+                <span class="points-value" id="user_score"><?php echo number_format($points); ?></span> <small>คะแนน</small>
             </div>
             <div style="text-align: right; font-size: 12px; color: #aaa;">
-            <?php 
-            if($points < 10) echo "อีก " . (10 - $points) . " คะแนนเพื่อเป็นระดับ Silver และรับส่วนลด 1% เมื่อซื้อสินค้าผ่านเว็บไซต์";
-            elseif($points < 20) echo "อีก " . (20 - $points) . " คะแนนเพื่อเป็นระดับ Gold และรับส่วนลด 2% เมื่อซื้อสินค้าผ่านเว็บไซต์";
-            elseif($points < 30) echo "อีก " . (30 - $points) . " คะแนนเพื่อเป็นระดับ Platinum และรับส่วนลด 3% เมื่อซื้อสินค้าผ่านเว็บไซต์";
-            else echo "คุณอยู่ในระดับสูงสุด Platinum เรียบร้อยแล้ว!";
-            ?>
+                <?php
+                    if($points < 10) echo "อีก " . (10 - $points) . " คะแนนเพื่อเป็นระดับ Silver และรับส่วนลด 1% เมื่อซื้อสินค้าผ่านเว็บไซต์";
+                    elseif($points < 20) echo "อีก " . (20 - $points) . " คะแนนเพื่อเป็นระดับ Gold และรับส่วนลด 2% เมื่อซื้อสินค้าผ่านเว็บไซต์";
+                    elseif($points < 30) echo "อีก " . (30 - $points) . " คะแนนเพื่อเป็นระดับ Platinum และรับส่วนลด 3% เมื่อซื้อสินค้าผ่านเว็บไซต์";
+                    else echo "คุณอยู่ในระดับสูงสุด Platinum เรียบร้อยแล้ว!";
+                ?>
             </div>
         </div>
 
@@ -305,43 +355,46 @@ function display_customer_points() {
 /**
  * คำนวณส่วนลดตามคะแนน (Level) ของลูกค้าที่หน้า Checkout
  */
-add_action( 'woocommerce_cart_calculate_fees', 'apply_tier_discount_based_on_score', 20, 1 );
+add_action('woocommerce_cart_calculate_fees', 'apply_tier_discount_based_on_score', 20, 1);
 
-function apply_tier_discount_based_on_score( $cart ) {
-    if ( is_admin() && ! defined( 'DOING_AJAX' ) ) return;
+function apply_tier_discount_based_on_score($cart)
+{
+    if (is_admin() && !defined('DOING_AJAX'))
+        return;
 
     // ดึง User ID ของคนที่กำลังจะซื้อ
     $user_id = get_current_user_id();
-    if ( ! $user_id ) return; // ถ้าเป็น Guest ไม่ได้ส่วนลด
+    if (!$user_id)
+        return; // ถ้าเป็น Guest ไม่ได้ส่วนลด
 
     global $wpdb;
-    
+
     // 1. ดึงคะแนนจากคอลัมน์ score ในตาราง wpln_users
-    $score = (int) $wpdb->get_var( $wpdb->prepare(
+    $score = (int) $wpdb->get_var($wpdb->prepare(
         "SELECT score FROM {$wpdb->prefix}users WHERE ID = %d",
         $user_id
-    ) );
+    ));
 
     // 2. กำหนดเงื่อนไขส่วนลด (Logic: 10 แต้ม = 1%, 20 แต้ม = 2%, 30 แต้ม = 3%)
     $discount_percentage = 0;
 
-    $p_score    = get_option('ms_platinum_score', 30);
+    $p_score = get_option('ms_platinum_score', 30);
     $p_discount = get_option('ms_platinum_discount', 3) / 100; // หาร 100 เพราะเก็บเป็นเลขจำนวนเต็ม
 
-    $g_score    = get_option('ms_gold_score', 20);
+    $g_score = get_option('ms_gold_score', 20);
     $g_discount = get_option('ms_gold_discount', 2) / 100;
 
-    $s_score    = get_option('ms_silver_score', 10);
+    $s_score = get_option('ms_silver_score', 10);
     $s_discount = get_option('ms_silver_discount', 1) / 100;
 
     // Logic การเช็คระดับ
-    if ( $score >= $p_score ) {
+    if ($score >= $p_score) {
         $discount_percentage = $p_discount;
         $level_name = "Platinum Membership (" . (get_option('ms_platinum_discount', 3)) . "%)";
-    } elseif ( $score >= $g_score ) {
+    } elseif ($score >= $g_score) {
         $discount_percentage = $g_discount;
         $level_name = "Gold Membership (" . (get_option('ms_gold_discount', 2)) . "%)";
-    } elseif ( $score >= $s_score ) {
+    } elseif ($score >= $s_score) {
         $discount_percentage = $s_discount;
         $level_name = "Silver Membership (" . (get_option('ms_silver_discount', 1)) . "%)";
     } else {
@@ -350,11 +403,206 @@ function apply_tier_discount_based_on_score( $cart ) {
     }
 
     // 3. ถ้ามีส่วนลด ให้คำนวณยอดแล้วหักออก
-    if ( $discount_percentage > 0 ) {
+    if ($discount_percentage > 0) {
         // คำนวณจากราคาสินค้ารวมในตะกร้า (ไม่รวมภาษี/ค่าส่ง หรือจะใช้ get_subtotal ก็ได้)
         $discount_amount = $cart->get_subtotal() * $discount_percentage;
 
         // บรรทัดนี้จะเพิ่มรายการส่วนลดเข้าไปในหน้า Checkout (ค่าติดลบเพื่อให้เป็นส่วนลด)
-        $cart->add_fee( __( 'ส่วนลดพิเศษ: ' . $level_name, 'woocommerce' ), -$discount_amount );
+        $cart->add_fee(__('ส่วนลดพิเศษ: ' . $level_name, 'woocommerce'), -$discount_amount);
     }
+}
+
+// แลกคะแนนเป็นส่วนลด
+add_action('woocommerce_before_my_account', 'redeem_form_in_my_account');
+
+function redeem_form_in_my_account()
+{
+    global $wpdb;
+    if (!is_user_logged_in())
+        return;
+
+    $user_id = get_current_user_id();
+    // ดึงคะแนนจากตาราง users โดยตรง
+    $score = (int) $wpdb->get_var($wpdb->prepare(
+        "SELECT score FROM {$wpdb->prefix}users WHERE ID = %d",
+        $user_id
+    ));
+
+    ?>
+    <div class="redeem-container" style="background:#fff; border:1px solid #e5e5e5; border-radius:8px; padding:25px; margin-bottom:30px; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+        <h2 style="margin-top:0; color:#333;">🎁 แลกคะแนนเป็นส่วนลด</h2>
+        <p style="color:#666; font-size:14px;">คะแนนปัจจุบัน: <strong id="current-user-score"
+                style="color:#27ae60; font-size:18px;"><?php echo number_format($score); ?></strong> คะแนน (1 คะแนน = 1 บาท)
+        </p>
+
+        <div style="display:flex; gap:10px; margin-top:15px;">
+            <input type="number" id="redeem-amount" placeholder="ระบุจำนวนคะแนนที่ต้องการแลก" min="1" max="<?php echo $score; ?>"
+                style="flex-grow:1; padding:10px; border:1px solid #ddd; border-radius:4px;">
+            <button id="redeem-btn" class="button button-primary">แลกโค้ดส่วนลด</button>
+        </div>
+        <div id="redeem-result" style="margin-top:15px; display:none;"></div>
+    </div>
+
+    <?php
+
+    $history = $wpdb->get_results( $wpdb->prepare(
+        "SELECT * FROM {$wpdb->prefix}redeem_history WHERE user_id = %d ORDER BY created_at DESC",
+        $user_id
+    ) );
+
+    if ( $history ) { ?>
+        <table style="width: 100%; border-collapse: collapse; margin-top:15px;">
+            <thead>
+                <tr style="background:#f8f8f8;">
+                    <th style="padding:10px; border-bottom:1px solid #ddd;">วันที่</th>
+                    <th style="padding:10px; border-bottom:1px solid #ddd;">โค้ด</th>
+                    <th style="padding:10px; border-bottom:1px solid #ddd;">คะแนนที่ใช้</th>
+                    <th style="padding:10px; border-bottom:1px solid #ddd;">สถานะ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($history as $row) : 
+                    // เช็คสถานะจริงจาก WooCommerce อีกทีเพื่อความชัวร์
+                    $c = new WC_Coupon($row->coupon_code);
+                    $display_status = ($c->get_usage_count() > 0) ? 'ใช้แล้ว' : 'ยังไม่ได้ใช้';
+                    $status_color = ($c->get_usage_count() > 0) ? '#999' : '#27ae60';
+                ?>
+                    <tr>
+                        <td style="padding:10px; border-bottom:1px solid #eee; text-align:center;"><?php echo date('j M Y', strtotime($row->created_at)); ?></td>
+                        <td style="padding:10px; border-bottom:1px solid #eee; text-align:center;"><code><?php echo $row->coupon_code; ?></code></td>
+                        <td style="padding:10px; border-bottom:1px solid #eee; text-align:center;"><?php echo number_format($row->points_used); ?></td>
+                        <td style="padding:10px; border-bottom:1px solid #eee; text-align:center; color:<?php echo $status_color; ?>;"><?php echo $display_status; ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    <?php } ?>
+
+    <script>
+        jQuery(document).ready(function ($) {
+            $('#redeem-btn').on('click', function (e) {
+                e.preventDefault();
+                var amount = $('#redeem-amount').val();
+                if (!amount || amount <= 0) {
+                    alert('กรุณากรอกจำนวนคะแนนที่ถูกต้อง');
+                    return;
+                }
+                var btn = $(this);
+                btn.text('กำลังแลก...').prop('disabled', true);
+                $.ajax({
+                    url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                    type: 'POST',
+                    data: {
+                        action: 'redeem_points',
+                        amount: amount,
+                        security: '<?php echo wp_create_nonce("redeem-nonce"); ?>'
+                    },
+                    success: function (res) {
+                        // ตรวจสอบว่า res เป็น Object หรือไม่
+                        if (res.success) {
+                            var htmlResult =
+                                `<div style="background:#e7fbd3; padding:15px; border-radius:4px; border:1px solid #2ecc71; color:#155724;">
+                            สำเร็จ! โค้ดส่วนลดของคุณคือ: <strong style="font-size:18px;">${res.data.coupon}</strong>
+                            <br>(ลด ${res.data.amount} บาท)
+                        </div>`;
+                            $('#redeem-result').html(htmlResult).fadeIn();
+                            $('#current-user-score').text(res.data.new_score);
+                            $('#user_score').text(res.data.new_score);
+                            $('#user_score_header').text(res.data.new_score);
+                            $('#redeem-amount').val('').attr('max', res.data.new_score_raw);
+                        } else {
+                            alert(res.data || 'เกิดข้อผิดพลาดในการแลกคะแนน');
+                        }
+                    },
+                    error: function () {
+                        alert('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
+                    },
+                    complete: function () {
+                        btn.text('แลกโค้ดส่วนลด').prop('disabled', false);
+                    }
+                });
+            });
+        });
+    </script>
+    <?php
+}
+
+add_action('wp_ajax_redeem_points', 'handle_ajax_redeem');
+
+function handle_ajax_redeem()
+{
+    check_ajax_referer('redeem-nonce', 'security');
+
+    global $wpdb;
+    $user_id = get_current_user_id();
+    $amount = intval($_POST['amount']);
+
+    // ดึงคะแนนจากตาราง users เพื่อตรวจสอบ
+    $current_score = (int) $wpdb->get_var($wpdb->prepare(
+        "SELECT score FROM {$wpdb->prefix}users WHERE ID = %d",
+        $user_id
+    ));
+
+    if ($amount <= 0 || $current_score < $amount) {
+        wp_send_json_error('คะแนนไม่เพียงพอ หรือระบุจำนวนไม่ถูกต้อง');
+    }
+
+    // สร้าง Coupon ใน WooCommerce
+    $coupon_code = 'REDEEM-' . strtoupper(wp_generate_password(8, false));
+    $coupon = new WC_Coupon();
+    $coupon->set_code($coupon_code);
+    $coupon->set_amount($amount);
+    $coupon->set_discount_type('fixed_cart');
+    $coupon->set_individual_use(true);
+    $coupon->set_usage_limit(1);
+    $coupon->set_description('Redeemed via My Account by User ID: ' . $user_id);
+    $coupon->save();
+
+    // หักคะแนนในตาราง users
+    $new_score = $current_score - $amount;
+    $wpdb->update(
+        "{$wpdb->prefix}users",
+        array('score' => $new_score),
+        array('ID' => $user_id),
+        array('%d'),
+        array('%d')
+    );
+
+    $wpdb->insert(
+    "{$wpdb->prefix}redeem_history",
+    array(
+        'user_id'     => $user_id,
+        'coupon_code' => $coupon_code,
+        'points_used' => $amount,
+        'status'      => 'unused'
+    ), array('%d', '%s', '%d', '%s'));
+
+    wp_send_json_success(array(
+        'coupon' => $coupon_code,
+        'amount' => number_format($amount),
+        'new_score' => number_format($new_score),
+        'new_score_raw' => $new_score
+    ));
+}
+
+/**
+ * อัปเดตสถานะในตาราง wp_redeem_history เมื่อคูปองถูกใช้งานในคำสั่งซื้อ
+ */
+add_action( 'woocommerce_order_status_completed', 'wcm_update_redeem_status_on_apply' );
+
+function wcm_update_redeem_status_on_apply( $coupon_code ) {
+    global $wpdb;
+    
+    // ทำความสะอาดชื่อคูปองก่อนค้นหา
+    $coupon_code = sanitize_text_field( $coupon_code );
+    $table_name = $wpdb->prefix . 'redeem_history';
+
+    // อัปเดตสถานะเป็น 'used' เฉพาะแถวที่มี Code ตรงกัน
+    $wpdb->update(
+        $table_name,
+        array( 'status' => 'used' ), // ข้อมูลที่ต้องการเปลี่ยน
+        array( 'coupon_code' => $coupon_code ), // เงื่อนไข
+        array( '%s' ), // Format ของข้อมูลใหม่
+        array( '%s' )  // Format ของเงื่อนไข
+    );
 }
