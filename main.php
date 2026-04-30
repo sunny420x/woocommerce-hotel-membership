@@ -920,7 +920,7 @@ function user_score_shortcode() {
 
     // 3. สร้าง HTML Output (สะสมค่าใส่ตัวแปรแล้วค่อย return)
     $output = '<div class="membership-score">';
-    $output .= '    <span class="icon">🏆</span>';
+    $output .= '    <span class="icon">⭐</span>';
     $output .= '    <span class="score-num" id="user_score_header">' . $display_score . '</span>';
     $output .= '    <span class="label">คะแนน</span>';
     $output .= '</div>';
