@@ -83,6 +83,29 @@ function woocommerce_membership_setting_page()
             <?php
             settings_fields('membership_settings_group');
             ?>
+            <h2>ระบบสะสมคะแนนจากการซื้อ</h1>
+            <table class="wp-list-table widefat fixed striped">
+                <tr>
+                    <td>ลูกค้าจะได้รับ 1 คะแนนต่อการซื้อ</td>
+                    <td><input type="text" name="membership_point_per_baht" value="<?=get_option('membership_point_per_baht', 500);?>"> บาท</td>
+                </tr>
+            </table>
+            <h2>ระบบแลกคะแนนเป็นส่วนลด</h1>
+            <table class="wp-list-table widefat fixed striped">
+                <tr>
+                    <td>ระบบแลกคะแนนเป็นส่วนลด</td>
+                    <td>
+                        <select name="membership_enable_redeem" id="">
+                            <option value="yes" <?php selected( get_option('membership_enable_redeem'), 'yes' ); ?>>เปิดใช้งาน</option>
+                            <option value="no" <?php selected( get_option('membership_enable_redeem'), 'no' ); ?>>ปิดใช้งาน</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>ลูกค้าสามารถใช้ 1 คะแนน ในการแลกเป็นส่วนลดได้</td>
+                    <td><input type="text" name="membership_baht_per_point" value="<?=get_option('membership_baht_per_point', 1);?>"> บาท </td>
+                </tr>
+            </table>
             <table class="wp-list-table widefat fixed striped" style="margin-top: 20px;">
                 <thead>
                     <tr>
@@ -115,21 +138,26 @@ function woocommerce_membership_setting_page()
                     </tr>
                 </tbody>
             </table>
-            <table class="wp-list-table widefat fixed striped">
-                <tr>
-                    <td>ลูกค้าจะได้รับ 1 คะแนนต่อการซื้อ</td>
-                    <td><input type="text" name="membership_point_per_baht" value="<?=get_option('membership_point_per_baht', 500);?>"> บาท</td>
-                </tr>
-                <tr>
-                    <td>ลูกค้าสามารถใช้ 1 คะแนน ในการแลกเป็นส่วนลดได้</td>
-                    <td><input type="text" name="membership_baht_per_point" value="<?=get_option('membership_baht_per_point', 1);?>"> บาท </td>
-                </tr>
-            </table>
             <br>
             <h1>⭐ ส่วนลดสำหรับสินค้าพิเศษ</h1>
             <br>
-            <label for="member-privileges-slug-name">Slug ของประเภทสินค้า:</label>
-            <input type="text" name="member-privileges-slug" value="<?=get_option('member-privileges-slug', 'member-privileges');?>">
+            <table class="wp-list-table widefat fixed striped">
+                <tr>
+                    <td>ระบบส่วนลดสำหรับสินค้าพิเศษ</td>
+                    <td>
+                        <select name="membership_enable_member_privileges" id="">
+                            <option value="yes" <?php selected( get_option('membership_enable_member_privileges'), 'yes' ); ?>>เปิดใช้งาน</option>
+                            <option value="no" <?php selected( get_option('membership_enable_member_privileges'), 'no' ); ?>>ปิดใช้งาน</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Slug ของประเภทสินค้า:</td>
+                    <td>
+                        <input type="text" name="member-privileges-slug" value="<?=get_option('member-privileges-slug', 'member-privileges');?>">
+                    </td>
+                </tr>
+            </table>
             <table class="wp-list-table widefat fixed striped" style="margin-top: 20px;">
                 <thead>
                     <tr>
@@ -140,15 +168,15 @@ function woocommerce_membership_setting_page()
                 <tbody>
                     <tr>
                         <td><strong>Silver Membership</strong></td>
-                        <td><input type="number" name="member-privileges-silver" value="<?php echo esc_attr(get_option('member-privileges-silver', 10)); ?>" /></td>
+                        <td><input type="number" name="member-privileges-silver" value="<?php echo esc_attr(get_option('member-privileges-silver', 10)); ?>" /> %</td>
                     </tr>
                     <tr>
                         <td><strong>Gold Membership</strong></td>
-                        <td><input type="number" name="member-privileges-gold" value="<?php echo esc_attr(get_option('member-privileges-gold', 20)); ?>" /></td>
+                        <td><input type="number" name="member-privileges-gold" value="<?php echo esc_attr(get_option('member-privileges-gold', 20)); ?>" /> %</td>
                     </tr>
                     <tr>
                         <td><strong>Platinum Membership</strong></td>
-                        <td><input type="number" name="member-privileges-platinum" value="<?php echo esc_attr(get_option('member-privileges-platinum', 30)); ?>" /></td>
+                        <td><input type="number" name="member-privileges-platinum" value="<?php echo esc_attr(get_option('member-privileges-platinum', 30)); ?>" /> %</td>
                     </tr>
                 </tbody>
             </table>
@@ -210,6 +238,7 @@ add_action('admin_init', 'membership_tier_settings_init');
 
 function membership_tier_settings_init()
 {
+    register_setting('membership_settings_group', 'membership_enable_redeem');
     register_setting('membership_settings_group', 'membership_point_per_baht');
     register_setting('membership_settings_group', 'membership_baht_per_point');
     // ลงทะเบียนค่าสำหรับแต่ละ Tier
@@ -224,6 +253,7 @@ function membership_tier_settings_init()
     register_setting('membership_settings_group', 'ms_silver_discount');
 
     //Member Privileges Discount
+    register_setting('membership_settings_group', 'membership_enable_member_privileges');
     register_setting('membership_settings_group', 'member-privileges-slug');
     register_setting('membership_settings_group', 'member-privileges-silver');
     register_setting('membership_settings_group', 'member-privileges-gold');
@@ -457,6 +487,8 @@ add_action('woocommerce_before_my_account', 'redeem_form_in_my_account');
 
 function redeem_form_in_my_account()
 {
+    if(get_option('membership_enable_redeem', 'no') === "no") return;
+
     global $wpdb;
     if (!is_user_logged_in())
         return;
@@ -652,6 +684,8 @@ function update_redeem_status_on_apply( $coupon_code ) {
  */
 add_filter('woocommerce_product_is_on_sale', 'member_check_is_on_sale', 10, 2);
 function member_check_is_on_sale($is_on_sale, $product) {
+    if(get_option('membership_enable_member_privileges', 'no') === "no") return;
+
     if (!is_user_logged_in()) return $is_on_sale;
 
     $discount_rate = getUserLevel("percent");
@@ -709,6 +743,8 @@ function getUserLevel($option) {
  */
 add_filter('woocommerce_get_price_html', 'member_display_custom_price_html', 10, 2);
 function member_display_custom_price_html($price_html, $product) {
+    if(get_option('membership_enable_member_privileges', 'no') === "no") return $price_html;
+
     if (!is_user_logged_in() || is_admin()) return $price_html;
     
     $special_categories = array('member-privileges'); 
@@ -744,6 +780,8 @@ function member_display_custom_price_html($price_html, $product) {
 add_action( 'woocommerce_before_calculate_totals', 'apply_member_cart_price', 999, 1 );
 
 function apply_member_cart_price( $cart ) {
+    if(get_option('membership_enable_member_privileges', 'no') === "no") return;
+
     if ( is_admin() && ! defined( 'DOING_AJAX' ) ) return;
     if ( ! is_user_logged_in() ) return;
 
@@ -775,6 +813,7 @@ function apply_member_cart_price( $cart ) {
 add_filter('woocommerce_sale_flash', 'member_custom_sale_badge', 10, 3);
 
 function member_custom_sale_badge($html, $post, $product) {
+    if(get_option('membership_enable_member_privileges', 'no') === "no") return;
     // 1. เช็คว่าล็อกอินไหม
     if (!is_user_logged_in()) return $html;
 
@@ -832,6 +871,7 @@ add_filter( 'woocommerce_product_get_price', 'force_clean_price', 999, 2 );
 add_filter( 'woocommerce_product_get_sale_price', 'force_clean_price', 999, 2 );
 
 function force_clean_price( $price, $product ) {
+    if(get_option('membership_enable_member_privileges', 'no') === "no") return $price;
     if ( is_admin() ) return $price;
 
     $discount_rate = getUserLevel("percent");
@@ -847,6 +887,8 @@ function force_clean_price( $price, $product ) {
 
 // ปิดสถานะ On Sale แบบเด็ดขาด
 add_filter( 'woocommerce_product_is_on_sale', function( $is_on_sale, $product ) {
+    if(get_option('membership_enable_member_privileges', 'no') === "no") return false;
+
     if ( is_admin() ) return $is_on_sale;
     
     $discount_rate = getUserLevel("percent");
