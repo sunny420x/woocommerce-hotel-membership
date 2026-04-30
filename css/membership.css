@@ -1,7 +1,6 @@
 /* Header */
 
 .membership-score {
-    display: inline-flex;
     align-items: center;
     background: #f1f1f1;
     color: #222;
@@ -10,6 +9,8 @@
     font-family: sans-serif;
     font-weight: 600;
     /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); */
+    margin: 0;
+    text-align: center;
 }
 
 .membership-score .label {
@@ -25,4 +26,10 @@
 
 .membership-score .icon {
     margin-right: 8px;
+}
+
+@media screen and (max-width: 900px) {
+    .membership-score {
+        margin: 20px;
+    }
 }

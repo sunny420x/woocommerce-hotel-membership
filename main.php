@@ -1,8 +1,7 @@
 <?php
 /**
  * Plugin Name: Membership System For WooCommerce
- * Description: มอบคะแนนสะสมให้ลูกค้า 1 คะแนน ต่อทุกยอดซื้อ 500 บาท สำหรับแลกคูปองส่วนลด
- * Version: 1.0
+ * Description: ระบบสะสมคะแนน ส่วนลด สิทธิพิเศษ สำหรับสมาชิกเว็บไซต์
  * Author: Jirakit Pawnsakunrungrot
  * Author URI: https://www.linkedin.com/in/sunny-jirakit
  * Plugin URI: https://github.com/sunny420x/woocommerce-membership
@@ -79,8 +78,7 @@ function woocommerce_membership_setting_page()
 {
     ?>
     <div class="wrap" style="background: #fff; padding: 20px; border-radius: 10px; margin-top: 20px;">
-        <h1>ตั้งค่าระดับ Membership</h1>
-        <hr>
+        <h1>👥 ตั้งค่าระบบ Membership</h1>
         <form action="options.php" method="post">
             <?php
             settings_fields('membership_settings_group');
@@ -88,9 +86,9 @@ function woocommerce_membership_setting_page()
             <table class="wp-list-table widefat fixed striped" style="margin-top: 20px;">
                 <thead>
                     <tr>
-                        <th>Membership Level</th>
-                        <th>Minimum Score (คะแนนขั้นต่ำ)</th>
-                        <th>Discount Percentage (%)</th>
+                        <th>ระดับสมาชิก (Membership Level)</th>
+                        <th>คะแนนขั้นต่ำ (Minimum Score)</th>
+                        <th>ลดเป็นจำนวนร้อยละ (Discount Percentage)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -117,15 +115,26 @@ function woocommerce_membership_setting_page()
                     </tr>
                 </tbody>
             </table>
-            <h1>ส่วนลดสำหรับสินค้าพิเศษ</h1>
-            <hr>
+            <table class="wp-list-table widefat fixed striped">
+                <tr>
+                    <td>ลูกค้าจะได้รับ 1 คะแนนต่อการซื้อ</td>
+                    <td><input type="text" name="membership_point_per_baht" value="<?=get_option('membership_point_per_baht', 500);?>"> บาท</td>
+                </tr>
+                <tr>
+                    <td>ลูกค้าสามารถใช้ 1 คะแนน ในการแลกเป็นส่วนลดได้</td>
+                    <td><input type="text" name="membership_baht_per_point" value="<?=get_option('membership_baht_per_point', 1);?>"> บาท </td>
+                </tr>
+            </table>
+            <br>
+            <h1>⭐ ส่วนลดสำหรับสินค้าพิเศษ</h1>
+            <br>
             <label for="member-privileges-slug-name">Slug ของประเภทสินค้า:</label>
             <input type="text" name="member-privileges-slug" value="<?=get_option('member-privileges-slug', 'member-privileges');?>">
             <table class="wp-list-table widefat fixed striped" style="margin-top: 20px;">
                 <thead>
                     <tr>
-                        <th>Membership Level</th>
-                        <th>Discount Percentage (%)</th>
+                        <th>ระดับสมาชิก (Membership Level)</th>
+                        <th>ลดเป็นจำนวนร้อยละ (Discount Percentage)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -158,14 +167,16 @@ function woocommerce_membership_setting_page()
                 }
             }
             ?>
+            <h1>👤 สมาชิกเว็บไซต์และคะแนนในระบบ</h1>
+            <br>
             <table class="wp-list-table widefat fixed striped">
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Display Name</th>
-                        <th>Email</th>
-                        <th>Score</th>
-                        <th>Level</th>
+                        <th>ชื่อที่แสดงในระบบ (Display Name)</th>
+                        <th>อีเมล์ (Email)</th>
+                        <th>คะแนนปัจจุบัน (Score)</th>
+                        <th>ระดับสมาชิก</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -177,7 +188,7 @@ function woocommerce_membership_setting_page()
                         ?>
                         <tr>
                             <td><?= $row->ID; ?></td>
-                            <td><?= $row->display_name; ?></td>
+                            <td><a href="/wp-admin/user-edit.php?user_id=<?=$row->ID;?>" target="_blank"><?= $row->display_name; ?></a></td>
                             <td><a href="/wp-admin/edit.php?s=<?= $row->user_email ?>&post_status=all&post_type=shop_order&action=-1&m=0&_created_via&_customer_user&paged=1&action2=-1"
                                     target="_blank"><?= $row->user_email; ?></a></td>
                             <td><?= $row->score; ?></td>
@@ -199,8 +210,9 @@ add_action('admin_init', 'membership_tier_settings_init');
 
 function membership_tier_settings_init()
 {
+    register_setting('membership_settings_group', 'membership_point_per_baht');
+    register_setting('membership_settings_group', 'membership_baht_per_point');
     // ลงทะเบียนค่าสำหรับแต่ละ Tier
-
     // Platinum
     register_setting('membership_settings_group', 'ms_platinum_score');
     register_setting('membership_settings_group', 'ms_platinum_discount');
@@ -242,7 +254,7 @@ function add_points_after_purchase($order_id)
 
     $user_id = $user->ID;
     $order_total = $order->get_total(); // หรือใช้ $order->get_subtotal() ถ้าไม่รวมค่าส่ง
-    $points_earned = floor($order_total / 500);
+    $points_earned = floor($order_total / get_option('membership_point_per_baht', 500));
 
     if ($points_earned > 0) {
         $table_name = $wpdb->prefix . 'users';
@@ -284,7 +296,6 @@ function display_customer_points()
     if ($points > 0) $bar_color = '#1D9DD8'; // Silver
     if ($points >= 10) $bar_color = '#FF9900'; // Gold
     if ($points >= 20) $bar_color = '#106DBA'; // Platinum
-
     ?>
     <style>
         .rewards-container {
@@ -354,18 +365,16 @@ function display_customer_points()
     <div class="rewards-container">
         <div class="points-header">
             <div>
-                <span style="display:block; color:#888; font-size:14px;">คะแนนสะสมของคุณ (ซื้อครบ 500 บาท = 1 คะแนน)</span>
+                <span style="display:block; color:#888; font-size:16px;">คะแนนสะสมและระดับ Membership</span>
+                <span style="display:block; color:#888; font-size:14px;">(ซื้อครบ <?=number_format(get_option('membership_point_per_baht', 500))?> บาท = 1 คะแนน)</span>
                 <span class="points-value" id="user_score"><?php echo number_format($points); ?></span> <small>คะแนน</small>
             </div>
-            <div style="text-align: right; font-size: 12px; color: #aaa;">
-                <?php
+            <div style="text-align: right; font-size: 14px; color: #aaa;"><?php
                     if($points < get_option('ms_silver_score', 10)) echo "อีก " . (10 - $points) . " คะแนนเพื่อเป็นระดับ Silver และรับส่วนลด 1% เมื่อซื้อสินค้าผ่านเว็บไซต์";
                     elseif($points < get_option('ms_gold_score', 20)) echo "อีก " . (20 - $points) . " คะแนนเพื่อเป็นระดับ Gold และรับส่วนลด 2% เมื่อซื้อสินค้าผ่านเว็บไซต์";
                     elseif($points < get_option('ms_platinum_score', 30)) echo "อีก " . (30 - $points) . " คะแนนเพื่อเป็นระดับ Platinum และรับส่วนลด 3% เมื่อซื้อสินค้าผ่านเว็บไซต์";
-                    else echo "คุณอยู่ในระดับสูงสุด Platinum เรียบร้อยแล้ว!";
-                ?>
-            </div>
-        </div>
+                    else echo "คุณอยู่ในระดับ Platinum เรียบร้อยแล้ว!";
+            ?></div></div>
 
         <div class="progress-track">
             <div class="progress-fill" style="width: <?php echo $percentage; ?>%;"></div>
@@ -463,7 +472,7 @@ function redeem_form_in_my_account()
     <div class="redeem-container" style="background:#fff; border-radius:8px; padding:25px; margin-bottom:30px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);">
         <h2 style="margin-top:0; color:#333;">🎁 แลกคะแนนเป็นส่วนลด</h2>
         <p style="color:#666; font-size:14px;">คะแนนปัจจุบัน: <strong id="current-user-score"
-                style="color:#27ae60; font-size:18px;"><?php echo number_format($score); ?></strong> คะแนน (1 คะแนน = 1 บาท)
+                style="color:#27ae60; font-size:18px;"><?php echo number_format($score); ?></strong> คะแนน (1 คะแนน = <?=number_format(get_option('membership_baht_per_point', 1));?> บาท)
         </p>
 
         <div style="display:flex; gap:10px; margin-top:15px;">
@@ -582,7 +591,7 @@ function handle_ajax_redeem()
     $coupon_code = 'REDEEM-' . strtoupper(wp_generate_password(8, false));
     $coupon = new WC_Coupon();
     $coupon->set_code($coupon_code);
-    $coupon->set_amount($amount);
+    $coupon->set_amount(($amount * get_option('membership_baht_per_point', 1)));
     $coupon->set_discount_type('fixed_cart');
     $coupon->set_individual_use(true);
     $coupon->set_usage_limit(1);
@@ -846,3 +855,34 @@ add_filter( 'woocommerce_product_is_on_sale', function( $is_on_sale, $product ) 
     }
     return $is_on_sale;
 }, 999, 2 );
+
+/**
+ * สร้าง Shortcode [user_score] สำหรับแสดงคะแนนสมาชิก
+ */
+function user_score_shortcode() {
+    // 1. เช็คก่อนว่าล็อกอินไหม ถ้าไม่ล็อกอินไม่ต้องโชว์อะไรเลย
+    if (!is_user_logged_in()) {
+        return '';
+    }
+
+    global $wpdb;
+    $user_id = get_current_user_id();
+
+    // 2. ดึงคะแนนจากฐานข้อมูล
+    $score = $wpdb->get_var($wpdb->prepare(
+        "SELECT score FROM {$wpdb->prefix}users WHERE ID = %d",
+        $user_id
+    ));
+
+    $display_score = $score ? number_format($score) : '0';
+
+    // 3. สร้าง HTML Output (สะสมค่าใส่ตัวแปรแล้วค่อย return)
+    $output = '<div class="membership-score">';
+    $output .= '    <span class="icon">🏆</span>';
+    $output .= '    <span class="score-num" id="user_score_header">' . $display_score . '</span>';
+    $output .= '    <span class="label">คะแนน</span>';
+    $output .= '</div>';
+
+    return $output;
+}
+add_shortcode('user_score', 'user_score_shortcode');
