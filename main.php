@@ -119,6 +119,8 @@ function woocommerce_membership_setting_page()
             </table>
             <h1>ส่วนลดสำหรับสินค้าพิเศษ</h1>
             <hr>
+            <label for="member-privileges-slug-name">Slug ของประเภทสินค้า:</label>
+            <input type="text" name="member-privileges-slug" value="<?=get_option('member-privileges-slug', 'member-privileges');?>">
             <table class="wp-list-table widefat fixed striped" style="margin-top: 20px;">
                 <thead>
                     <tr>
@@ -210,6 +212,7 @@ function membership_tier_settings_init()
     register_setting('membership_settings_group', 'ms_silver_discount');
 
     //Member Privileges Discount
+    register_setting('membership_settings_group', 'member-privileges-slug');
     register_setting('membership_settings_group', 'member-privileges-silver');
     register_setting('membership_settings_group', 'member-privileges-gold');
     register_setting('membership_settings_group', 'member-privileges-platinum');
@@ -649,7 +652,7 @@ function member_check_is_on_sale($is_on_sale, $product) {
         return false; 
     }
 
-    $special_categories = array('member-privileges');
+    $special_categories = array(explode("\n", get_option('member-privileges-slug-name', 'member-privileges')));
     if (has_term($special_categories, 'product_cat', $product->get_id())) {
         return true;
     }
@@ -700,19 +703,27 @@ function member_display_custom_price_html($price_html, $product) {
     if (!is_user_logged_in() || is_admin()) return $price_html;
     
     $special_categories = array('member-privileges'); 
-    
-    // 1. เช็คหมวดหมู่ก่อน
-    if (has_term($special_categories, 'product_cat', $product->get_id())) {        
-        $regular_price = (float)$product->get_regular_price();
-        $discount_rate = getUserLevel("percent");
-        $sale_price = $regular_price * $discount_rate;
+
+    if (has_term($special_categories, 'product_cat', $product->get_id())) {
+        
+        $discount_rate = getUserLevel("percent"); // สมมติว่า Platinum ลด 30% ต้องได้ 0.7
         $level_name = getUserLevel('name');
 
-        if($discount_rate >= 1) return $price_html;
+        if ($discount_rate >= 1 || empty($level_name)) return $price_html;
+
+        // ดึงราคาปกติ (Regular Price) แบบดิบๆ มาเลย ไม่เอาที่โดนฟิลเตอร์อื่นแก้
+        $regular_price = (float)$product->get_regular_price();
         
+        // คำนวณราคาใหม่
+        $sale_price = $regular_price * $discount_rate;
+
+        // ตรวจสอบว่าคำนวณแล้วราคาลดลงจริงไหม (ป้องกันกรณี 350 ลดแล้วเหลือ 350)
+        if ($sale_price >= $regular_price) return $price_html;
+
+        // สร้าง HTML ใหม่
         $price_html = '<del aria-hidden="true">' . wc_price($regular_price) . '</del> ';
         $price_html .= '<ins>' . wc_price($sale_price) . '</ins>';
-        $price_html .= ' <span class="member-tag" style="font-size:12px; color:#27ae60; display:block; margin-top: 10px;">(ราคาพิเศษสำหรับสมาชิก ' . ucfirst($level_name) . ')</span>';
+        $price_html .= ' <span class="member-tag" style="font-size:12px; color:#27ae60; display:block; margin-top: 5px;">(ราคาสำหรับสมาชิก ' . ucfirst($level_name) . ')</span>';
     }
 
     return $price_html;
@@ -726,7 +737,7 @@ add_action('woocommerce_before_calculate_totals', function($cart) {
     if (!is_user_logged_in()) return;
 
     // กำหนด Slug ของหมวดหมู่
-    $wcm_target_slugs = array( 'member-privileges' ); 
+    $wcm_target_slugs = array(explode("\n", get_option('member-privileges-slug-name', 'member-privileges'))); 
     $discount_rate = getUserLevel('percent');
 
     foreach ($cart->get_cart() as $cart_item_key => $cart_item) {
@@ -782,7 +793,7 @@ add_filter( 'woocommerce_product_categories_widget_args', 'exclude_widget_catego
 
 function exclude_widget_category_by_slug( $args ) {
     if (!is_user_logged_in() ) {
-        $excluded_slugs = array('member-privileges'); 
+        $excluded_slugs = array(explode("\n", get_option('member-privileges-slug-name', 'member-privileges'))); 
         $excluded_ids = array();
 
         foreach ( $excluded_slugs as $slug ) {
@@ -804,16 +815,16 @@ function exclude_widget_category_by_slug( $args ) {
 }
 
 // บังคับให้ราคาทุกอย่างกลับมาเป็นราคาปกติ ถ้าคะแนนสมาชิกไม่ถึง
-add_filter( 'woocommerce_product_get_price', 'wcm_force_clean_price', 999, 2 );
-add_filter( 'woocommerce_product_get_sale_price', 'wcm_force_clean_price', 999, 2 );
+add_filter( 'woocommerce_product_get_price', 'force_clean_price', 999, 2 );
+add_filter( 'woocommerce_product_get_sale_price', 'force_clean_price', 999, 2 );
 
-function wcm_force_clean_price( $price, $product ) {
+function force_clean_price( $price, $product ) {
     if ( is_admin() ) return $price;
 
     $discount_rate = getUserLevel("percent");
 
     // ถ้าคะแนนไม่ถึง 10 (Rate = 1) 
-    if ( $discount_rate >= 1 && has_term('member-privileges', 'product_cat', $product->get_id()) ) {
+    if ( $discount_rate >= 1 && has_term(get_option('member-privileges-slug-name', 'member-privileges'), 'product_cat', $product->get_id()) ) {
         // คืนค่าราคาปกติ (Regular Price) เท่านั้น เพื่อไม่ให้เกิดสถานะ Sale
         return $product->get_regular_price();
     }
@@ -826,7 +837,7 @@ add_filter( 'woocommerce_product_is_on_sale', function( $is_on_sale, $product ) 
     if ( is_admin() ) return $is_on_sale;
     
     $discount_rate = getUserLevel("percent");
-    if ( $discount_rate >= 1 && has_term('member-privileges', 'product_cat', $product->get_id()) ) {
+    if ( $discount_rate >= 1 && has_term(get_option('member-privileges-slug-name', 'member-privileges'), 'product_cat', $product->get_id()) ) {
         return false;
     }
     return $is_on_sale;
