@@ -38,15 +38,13 @@ function worldchem_plugin_install() {
 
     require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
-    // 1. เพิ่ม Column 'score' ในตาราง users (ถ้ายังไม่มี)
-    // dbDelta จะตรวจสอบโครงสร้างตารางเดิมให้เอง
     $sql_user = "CREATE TABLE $user_table (
         ID bigint(20) unsigned NOT NULL AUTO_INCREMENT,
         score int(12) DEFAULT 0 NOT NULL,
         PRIMARY KEY  (ID)
     ) $charset_collate;";
     
-    // 2. สร้างตาราง redeem_history
+    // สร้างตาราง redeem_history
     $sql_history = "CREATE TABLE $redeem_table (
         id bigint(20) NOT NULL AUTO_INCREMENT,
         user_id bigint(20) NOT NULL,
@@ -200,6 +198,7 @@ add_action('admin_init', 'membership_tier_settings_init');
 function membership_tier_settings_init()
 {
     // ลงทะเบียนค่าสำหรับแต่ละ Tier
+
     // Platinum
     register_setting('membership_settings_group', 'ms_platinum_score');
     register_setting('membership_settings_group', 'ms_platinum_discount');
@@ -210,6 +209,7 @@ function membership_tier_settings_init()
     register_setting('membership_settings_group', 'ms_silver_score');
     register_setting('membership_settings_group', 'ms_silver_discount');
 
+    //Member Privileges Discount
     register_setting('membership_settings_group', 'member-privileges-silver');
     register_setting('membership_settings_group', 'member-privileges-gold');
     register_setting('membership_settings_group', 'member-privileges-platinum');
@@ -259,7 +259,7 @@ function add_points_after_purchase($order_id)
     }
 }
 
-// (Optional) แสดงคะแนนในหน้า My Account ของลูกค้า
+// แสดงคะแนนในหน้า My Account ของลูกค้า
 add_action('woocommerce_before_my_account', 'display_customer_points');
 
 function display_customer_points()
@@ -397,13 +397,13 @@ function apply_tier_discount_based_on_score($cart)
 
     global $wpdb;
 
-    // 1. ดึงคะแนนจากคอลัมน์ score ในตาราง wpln_users
+    // ดึงคะแนนจากคอลัมน์ score ในตาราง wpln_users
     $score = (int) $wpdb->get_var($wpdb->prepare(
         "SELECT score FROM {$wpdb->prefix}users WHERE ID = %d",
         $user_id
     ));
 
-    // 2. กำหนดเงื่อนไขส่วนลด (Logic: 10 แต้ม = 1%, 20 แต้ม = 2%, 30 แต้ม = 3%)
+    // กำหนดเงื่อนไขส่วนลด (Logic: 10 แต้ม = 1%, 20 แต้ม = 2%, 30 แต้ม = 3%)
     $discount_percentage = 0;
 
     $p_score = get_option('ms_platinum_score', 30);
@@ -430,7 +430,7 @@ function apply_tier_discount_based_on_score($cart)
         $level_name = "General Member";
     }
 
-    // 3. ถ้ามีส่วนลด ให้คำนวณยอดแล้วหักออก
+    // ถ้ามีส่วนลด ให้คำนวณยอดแล้วหักออก
     if ($discount_percentage > 0) {
         // คำนวณจากราคาสินค้ารวมในตะกร้า (ไม่รวมภาษี/ค่าส่ง หรือจะใช้ get_subtotal ก็ได้)
         $discount_amount = $cart->get_subtotal() * $discount_percentage;
@@ -457,7 +457,7 @@ function redeem_form_in_my_account()
     ));
 
     ?>
-    <div class="redeem-container" style="background:#fff; border:1px solid #e5e5e5; border-radius:8px; padding:25px; margin-bottom:30px; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+    <div class="redeem-container" style="background:#fff; border-radius:8px; padding:25px; margin-bottom:30px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);">
         <h2 style="margin-top:0; color:#333;">🎁 แลกคะแนนเป็นส่วนลด</h2>
         <p style="color:#666; font-size:14px;">คะแนนปัจจุบัน: <strong id="current-user-score"
                 style="color:#27ae60; font-size:18px;"><?php echo number_format($score); ?></strong> คะแนน (1 คะแนน = 1 บาท)
@@ -516,7 +516,7 @@ function redeem_form_in_my_account()
                     return;
                 }
                 var btn = $(this);
-                btn.text('กำลังแลก...').prop('disabled', true);
+                btn.text('กรุณารอสักครู่...').prop('disabled', true);
                 $.ajax({
                     url: '<?php echo admin_url('admin-ajax.php'); ?>',
                     type: 'POST',
@@ -616,9 +616,9 @@ function handle_ajax_redeem()
 /**
  * อัปเดตสถานะในตาราง wp_redeem_history เมื่อคูปองถูกใช้งานในคำสั่งซื้อ
  */
-add_action( 'woocommerce_order_status_completed', 'wcm_update_redeem_status_on_apply' );
+add_action( 'woocommerce_order_status_completed', 'update_redeem_status_on_apply' );
 
-function wcm_update_redeem_status_on_apply( $coupon_code ) {
+function update_redeem_status_on_apply( $coupon_code ) {
     global $wpdb;
     
     // ทำความสะอาดชื่อคูปองก่อนค้นหา
@@ -641,6 +641,13 @@ function wcm_update_redeem_status_on_apply( $coupon_code ) {
 add_filter('woocommerce_product_is_on_sale', 'member_check_is_on_sale', 10, 2);
 function member_check_is_on_sale($is_on_sale, $product) {
     if (!is_user_logged_in()) return $is_on_sale;
+
+    $discount_rate = getUserLevel("percent");
+
+    // ถ้าเรทเป็น 1 (คะแนนไม่ถึง 10) ห้ามบอกว่า On Sale เด็ดขาด
+    if ($discount_rate >= 1) {
+        return false; 
+    }
 
     $special_categories = array('member-privileges');
     if (has_term($special_categories, 'product_cat', $product->get_id())) {
@@ -668,9 +675,12 @@ function getUserLevel($option) {
     } 
     elseif ($user_score >= get_option('ms_silver_score', 10)) {
         $level_name = "silver";
-    } 
-    else {
-        return;
+    } else {
+        if($option == "percent") {
+            return 1;
+        } else {
+            return null;
+        }
     }
 
     $discount_percent = get_option("member-privileges-$level_name", 0);
@@ -690,19 +700,19 @@ function member_display_custom_price_html($price_html, $product) {
     if (!is_user_logged_in() || is_admin()) return $price_html;
     
     $special_categories = array('member-privileges'); 
+    
+    // 1. เช็คหมวดหมู่ก่อน
+    if (has_term($special_categories, 'product_cat', $product->get_id())) {        
+        $regular_price = (float)$product->get_regular_price();
+        $discount_rate = getUserLevel("percent");
+        $sale_price = $regular_price * $discount_rate;
+        $level_name = getUserLevel('name');
 
-    if (has_term($special_categories, 'product_cat', $product->get_id())) {
-        $regular_price = $product->get_regular_price();
+        if($discount_rate >= 1) return $price_html;
         
-        $discount_rate = getUserLevel('percent'); 
-        if ($discount_rate >= 1) return $price_html;
-
-        $sale_price = (float)$regular_price * $discount_rate;
-
-        // สร้าง HTML แบบขีดฆ่าสไตล์ WooCommerce
         $price_html = '<del aria-hidden="true">' . wc_price($regular_price) . '</del> ';
         $price_html .= '<ins>' . wc_price($sale_price) . '</ins>';
-        $price_html .= ' <span class="member-tag" style="font-size:12px; color:#27ae60; display:block; margin-top: 10px;">(ราคาพิเศษสำหรับสมาชิก '. ucfirst(getUserLevel('name')) .')</span>';
+        $price_html .= ' <span class="member-tag" style="font-size:12px; color:#27ae60; display:block; margin-top: 10px;">(ราคาพิเศษสำหรับสมาชิก ' . ucfirst($level_name) . ')</span>';
     }
 
     return $price_html;
@@ -764,3 +774,60 @@ add_filter('woocommerce_product_is_on_sale', function($is_on_sale, $product) {
     $wcm_target_slugs = array( 'สิทธิพิเศษสำหรับสมาชิก' ); 
     return has_term($wcm_target_slugs, 'product_cat', $product->get_id()) ? true : $is_on_sale;
 }, 10, 2);
+
+/**
+ * ซ่อนหมวดหมู่จาก Widget โดยระบุเป็น Slug Name
+ */
+add_filter( 'woocommerce_product_categories_widget_args', 'exclude_widget_category_by_slug' );
+
+function exclude_widget_category_by_slug( $args ) {
+    if (!is_user_logged_in() ) {
+        $excluded_slugs = array('member-privileges'); 
+        $excluded_ids = array();
+
+        foreach ( $excluded_slugs as $slug ) {
+            $term = get_term_by( 'slug', $slug, 'product_cat' );
+            if ( $term ) {
+                $excluded_ids[] = $term->term_id;
+            }
+        }
+
+        if ( ! empty( $excluded_ids ) ) {
+            $current_exclude = isset( $args['exclude'] ) ? (array) $args['exclude'] : array();
+            $args['exclude'] = array_merge( $current_exclude, $excluded_ids );
+        }
+
+        return $args;
+    } else {
+        return $args;
+    }
+}
+
+// บังคับให้ราคาทุกอย่างกลับมาเป็นราคาปกติ ถ้าคะแนนสมาชิกไม่ถึง
+add_filter( 'woocommerce_product_get_price', 'wcm_force_clean_price', 999, 2 );
+add_filter( 'woocommerce_product_get_sale_price', 'wcm_force_clean_price', 999, 2 );
+
+function wcm_force_clean_price( $price, $product ) {
+    if ( is_admin() ) return $price;
+
+    $discount_rate = getUserLevel("percent");
+
+    // ถ้าคะแนนไม่ถึง 10 (Rate = 1) 
+    if ( $discount_rate >= 1 && has_term('member-privileges', 'product_cat', $product->get_id()) ) {
+        // คืนค่าราคาปกติ (Regular Price) เท่านั้น เพื่อไม่ให้เกิดสถานะ Sale
+        return $product->get_regular_price();
+    }
+
+    return $price;
+}
+
+// ปิดสถานะ On Sale แบบเด็ดขาด
+add_filter( 'woocommerce_product_is_on_sale', function( $is_on_sale, $product ) {
+    if ( is_admin() ) return $is_on_sale;
+    
+    $discount_rate = getUserLevel("percent");
+    if ( $discount_rate >= 1 && has_term('member-privileges', 'product_cat', $product->get_id()) ) {
+        return false;
+    }
+    return $is_on_sale;
+}, 999, 2 );
