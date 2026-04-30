@@ -730,31 +730,35 @@ function member_display_custom_price_html($price_html, $product) {
 }
 
 /**
- * 3. บังคับราคาในตะกร้าสินค้า (เวอร์ชันปรับปรุงให้แม่นยำขึ้น)
+ * บังคับเปลี่ยนราคาในตะกร้าให้เป็นราคาสมาชิก
  */
-add_action('woocommerce_before_calculate_totals', function($cart) {
-    if (is_admin() && !defined('DOING_AJAX')) return;
-    if (!is_user_logged_in()) return;
+add_action( 'woocommerce_before_calculate_totals', 'apply_member_cart_price', 999, 1 );
 
-    // กำหนด Slug ของหมวดหมู่
-    $wcm_target_slugs = array(explode("\n", get_option('member-privileges-slug-name', 'member-privileges'))); 
-    $discount_rate = getUserLevel('percent');
+function apply_member_cart_price( $cart ) {
+    if ( is_admin() && ! defined( 'DOING_AJAX' ) ) return;
+    if ( ! is_user_logged_in() ) return;
 
-    foreach ($cart->get_cart() as $cart_item_key => $cart_item) {
+    // ดึงเรทส่วนลดจากฟังก์ชันที่พี่ทำไว้
+    $discount_rate = getUserLevel("percent");
+
+    // ถ้าไม่มีส่วนลด (คะแนน < 10) ไม่ต้องทำอะไร
+    if ( $discount_rate >= 1 ) return;
+
+    // วนลูปสินค้าในตะกร้า
+    foreach ( $cart->get_cart() as $cart_item ) {
         $product = $cart_item['data'];
-        $product_id = $product->get_id();
 
-        // ตรวจสอบหมวดหมู่
-        if (has_term($wcm_target_slugs, 'product_cat', $product_id)) {
+        // เช็คว่าสินค้าอยู่ในหมวดสิทธิพิเศษไหม
+        if ( has_term( 'member-privileges', 'product_cat', $product->get_id() ) ) {
+            
             $regular_price = (float)$product->get_regular_price();
-            $special_price = $regular_price * $discount_rate;
+            $member_price = $regular_price * $discount_rate;
 
-            // บังคับราคาใหม่ลงใน Object ของสินค้าที่อยู่ในตะกร้า
-            $cart_item['data']->set_price($special_price);
-            $cart_item['data']->set_sale_price($special_price);
+            // บังคับเซ็ตราคาใหม่ในตะกร้า
+            $product->set_price( $member_price );
         }
     }
-}, 20);
+}
 
 /**
  * บังคับให้แสดงป้ายเปอร์เซ็นต์ส่วนลดสมาชิก ในโครงสร้าง HTML ของธีม
