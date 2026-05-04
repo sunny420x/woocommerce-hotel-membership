@@ -106,12 +106,14 @@ function woocommerce_membership_setting_page()
                     <td><input type="text" name="membership_baht_per_point" value="<?=get_option('membership_baht_per_point', 1);?>"> บาท </td>
                 </tr>
             </table>
+            <h2>เกณฑ์การคิดคะแนนและให้ส่วนลดทั้งตะกร้า</h1>
             <table class="wp-list-table widefat fixed striped" style="margin-top: 20px;">
                 <thead>
                     <tr>
                         <th>ระดับสมาชิก (Membership Level)</th>
                         <th>คะแนนขั้นต่ำ (Minimum Score)</th>
                         <th>ลดเป็นจำนวนร้อยละ (Discount Percentage)</th>
+                        <th>สีที่ใช้แสดงในระบบ</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -121,6 +123,8 @@ function woocommerce_membership_setting_page()
                                 value="<?php echo esc_attr(get_option('ms_platinum_score', 30)); ?>" /></td>
                         <td><input type="number" step="0.01" name="ms_platinum_discount"
                                 value="<?php echo esc_attr(get_option('ms_platinum_discount', 3)); ?>" /> %</td>
+                        <td><input type="text" name="member-privileges-platinum-color"
+                                value="<?php echo esc_attr(get_option('member-privileges-platinum-color')); ?>" /></td>
                     </tr>
                     <tr>
                         <td><strong>Gold Membership</strong></td>
@@ -128,6 +132,8 @@ function woocommerce_membership_setting_page()
                                 value="<?php echo esc_attr(get_option('ms_gold_score', 20)); ?>" /></td>
                         <td><input type="number" step="0.01" name="ms_gold_discount"
                                 value="<?php echo esc_attr(get_option('ms_gold_discount', 2)); ?>" /> %</td>
+                        <td><input type="text" name="member-privileges-gold-color"
+                                value="<?php echo esc_attr(get_option('member-privileges-gold-color')); ?>" /></td>
                     </tr>
                     <tr>
                         <td><strong>Silver Membership</strong></td>
@@ -135,6 +141,43 @@ function woocommerce_membership_setting_page()
                                 value="<?php echo esc_attr(get_option('ms_silver_score', 10)); ?>" /></td>
                         <td><input type="number" step="0.01" name="ms_silver_discount"
                                 value="<?php echo esc_attr(get_option('ms_silver_discount', 1)); ?>" /> %</td>
+                        <td><input type="text" name="member-privileges-silver-color"
+                                value="<?php echo esc_attr(get_option('member-privileges-silver-color')); ?>" /></td>
+                    </tr>
+                </tbody>
+            </table>
+            <h2>เนื้อหาที่แสดงในการ์ด</h2>
+            <table class="wp-list-table widefat fixed striped" style="margin-top: 20px;">
+                <thead>
+                    <tr>
+                        <th>ระดับสมาชิก (Membership Level)</th>
+                        <th>เนื้อหา</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Platinum Membership:</strong></td>
+                        <td>
+                            <input type="text" name="ms_platinum_description_title"
+                                value="<?php echo esc_attr(get_option('ms_platinum_description_title')); ?>" style="width: 500px;" />
+                            <textarea name="ms_platinum_description_content" id="" style="width: 500px; height: 300px;"><?=get_option('ms_platinum_description_content')?></textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Gold Membership:</strong></td>
+                        <td>
+                            <input type="text" name="ms_gold_description_title"
+                                value="<?php echo esc_attr(get_option('ms_gold_description_title')); ?>" style="width: 500px;" />
+                            <textarea name="ms_gold_description_content" id="" style="width: 500px; height: 300px;"><?=get_option('ms_gold_description_content')?></textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Silver Membership:</strong></td>
+                        <td>
+                            <input type="text" name="ms_silver_description_title"
+                                value="<?php echo esc_attr(get_option('ms_silver_description_title')); ?>" style="width: 500px;" />
+                            <textarea name="ms_silver_description_content" id="" style="width: 500px; height: 300px;"><?=get_option('ms_silver_description_content')?></textarea>
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -180,7 +223,7 @@ function woocommerce_membership_setting_page()
                     </tr>
                 </tbody>
             </table>
-            <?php submit_button('บันทึกเกณฑ์คะแนน'); ?>
+            <?php submit_button('บันทึกการเปลี่ยนแปลง'); ?>
             <?php
             function getMemberShipLevel($score)
             {
@@ -258,6 +301,17 @@ function membership_tier_settings_init()
     register_setting('membership_settings_group', 'member-privileges-silver');
     register_setting('membership_settings_group', 'member-privileges-gold');
     register_setting('membership_settings_group', 'member-privileges-platinum');
+
+    register_setting('membership_settings_group', 'ms_platinum_description_title');
+    register_setting('membership_settings_group', 'ms_platinum_description_content');
+    register_setting('membership_settings_group', 'ms_gold_description_title');
+    register_setting('membership_settings_group', 'ms_gold_description_content');
+    register_setting('membership_settings_group', 'ms_silver_description_title');
+    register_setting('membership_settings_group', 'ms_silver_description_content');
+
+    register_setting('membership_settings_group', 'member-privileges-silver-color');
+    register_setting('membership_settings_group', 'member-privileges-gold-color');
+    register_setting('membership_settings_group', 'member-privileges-platinum-color');
 }
 
 // ฟังก์ชันคำนวณและเพิ่มคะแนนเมื่อออเดอร์เสร็จสมบูรณ์
@@ -323,75 +377,47 @@ function display_customer_points()
 
     // กำหนดสีตามช่วงคะแนน
     $bar_color = '#CCC';
-    if ($points > 0) $bar_color = '#1D9DD8'; // Silver
-    if ($points >= 10) $bar_color = '#FF9900'; // Gold
-    if ($points >= 20) $bar_color = '#106DBA'; // Platinum
+    if ($points > 0) $bar_color = esc_attr(get_option('member-privileges-silver-color')); // Silver
+    if ($points >= 10) $bar_color = esc_attr(get_option('member-privileges-gold-color')); // Gold
+    if ($points >= 20) $bar_color = esc_attr(get_option('member-privileges-platinum-color')); // Platinum
     ?>
     <style>
-        .rewards-container {
-            font-family: 'Kanit';
-            margin-bottom: 30px;
-            padding: 20px;
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-        }
-        .points-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            margin-bottom: 15px;
-        }
-        .points-value {
-            font-size: 28px;
-            font-weight: bold;
-            color: <?php echo $bar_color; ?>;
-        }
-        .progress-track {
-            position: relative;
-            width: 100%;
-            height: 12px;
-            background: #eee;
-            border-radius: 10px;
-            margin: 25px 0;
-        }
         .progress-fill {
             height: 100%;
             background: <?php echo $bar_color; ?>;
             border-radius: 10px;
             transition: width 0.5s ease;
         }
-        .milestones {
-            position: absolute;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: space-between;
-        }
-        .dot {
-            width: 18px;
-            height: 18px;
-            background: #fff;
-            border: 3px solid #eee;
-            border-radius: 50%;
-            margin-top: -3px;
-            position: relative;
-        }
         .dot.active {
             border-color: <?php echo $bar_color; ?>;
         }
-        .dot-label {
-            position: absolute;
-            top: 25px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 12px;
+        .points-value {
+            font-size: 28px;
             font-weight: bold;
-            color: #666;
+            color: <?php echo $bar_color;?>;
+        }
+        .description #description-platinum::after {
+            border-color: transparent transparent <?php echo esc_attr(get_option('member-privileges-platinum-color')); ?> transparent;
+        }
+        .description #description-gold::after {
+            border-color: transparent transparent <?php echo esc_attr(get_option('member-privileges-gold-color')); ?> transparent;
+        }
+        .description #description-silver::after {
+            border-color: transparent transparent <?php echo esc_attr(get_option('member-privileges-silver-color')); ?> transparent;
+        }
+        #description-platinum {
+            background: <?php echo esc_attr(get_option('member-privileges-platinum-color')); ?>;
+            opacity: 0.5;
+        }
+        #description-gold {
+            background: <?php echo esc_attr(get_option('member-privileges-gold-color')); ?>;
+            opacity: 0.5;
+        }
+        #description-silver {
+            background: <?php echo esc_attr(get_option('member-privileges-silver-color')); ?>;
+            opacity: 0.5;
         }
     </style>
-
     <div class="rewards-container">
         <div class="points-header">
             <div>
@@ -415,8 +441,19 @@ function display_customer_points()
                 <div class="dot <?php echo ($points >= get_option('ms_platinum_score', 30)) ? 'active' : ''; ?>" style="right: 0; position: absolute;"><span class="dot-label">30+</span></div>
             </div>
         </div>
-        <div style="margin-top: 40px; font-size: 13px; color: #666; text-align: center;">
-
+        <div class="description">
+            <div class="card" id="description-silver" style="left: 14.2%; <?php if($points >= get_option('ms_silver_score', 10) && $points < get_option('ms_gold_score', 20)) { echo 'opacity: 1;'; } ?>">
+                <h2><?=get_option('ms_silver_description_title');?></h2>
+                <?=get_option('ms_silver_description_content');?>
+            </div>
+            <div class="card" id="description-gold" style="left: 24%; <?php if($points >= get_option('ms_gold_score', 20) && $points < get_option('ms_platinum_score', 30)) { echo 'opacity: 1;'; } ?>">
+                <h2><?=get_option('ms_gold_description_title');?></h2>
+                <?=get_option('ms_gold_description_content');?>
+            </div>
+            <div class="card" id="description-platinum" style="left: 30%; <?php if($points >= get_option('ms_platinum_score', 30)) { echo 'opacity: 1;'; } ?>">
+                <h2><?=get_option('ms_platinum_description_title');?></h2>
+                <?=get_option('ms_platinum_description_content');?>
+            </div>
         </div>
     </div>
     <?php
@@ -523,7 +560,8 @@ function redeem_form_in_my_account()
     ) );
 
     if ( $history ) { ?>
-        <table style="width: 100%; border-collapse: collapse; margin-top:15px;">
+    <div style="overflow: auto;">
+        <table style="width: 100%; border-collapse: collapse; margin-top:15px; white-space: nowrap;">
             <thead>
                 <tr style="background:#f8f8f8;">
                     <th style="padding:10px; border-bottom:1px solid #ddd;">วันที่</th>
@@ -548,6 +586,7 @@ function redeem_form_in_my_account()
                 <?php endforeach; ?>
             </tbody>
         </table>
+    </div>
     <?php } ?>
 
     <script>

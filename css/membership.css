@@ -28,8 +28,105 @@
     margin-right: 8px;
 }
 
+.rewards-container {
+    font-family: 'Kanit';
+    margin-bottom: 30px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.points-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 15px;
+}
+
+.progress-track {
+    position: relative;
+    width: 100%;
+    height: 12px;
+    background: #eee;
+    border-radius: 10px;
+    margin: 25px 0;
+}
+
+.milestones {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.dot {
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border: 3px solid #eee;
+    border-radius: 50%;
+    margin-top: -3px;
+    position: relative;
+}
+
+.dot-label {
+    position: absolute;
+    top: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    font-weight: bold;
+    color: #666;
+}
+
+.description {
+    display: flex;
+    margin-top: 50px;
+}
+
+.description .card {
+    width: 200px;
+    padding: 10px 20px;
+    background: #f8f8f8;
+    border-radius: 20px;
+    position: relative;
+    color: #fff;
+}
+
+.description .card h2 {
+    margin: 0;
+    color: #fff;
+    font-weight: 500;
+}
+
+.description .card ul {
+    padding: 0;
+    list-style: none;
+}
+
+.description .card::after {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 85%;
+    transform: translateX(-50%);
+    border-width: 8px;
+    border-style: solid;
+    filter: drop-shadow(0 -2px 2px rgba(0, 0, 0, 0.05));
+}
+
 @media screen and (max-width: 900px) {
     .membership-score {
         margin: 20px;
+    }
+    .description {
+        display: block;
+    }
+    .description .card {
+        position: static;
+        margin-top: 20px;
     }
 }
