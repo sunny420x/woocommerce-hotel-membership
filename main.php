@@ -160,7 +160,7 @@ function woocommerce_membership_setting_page()
                         <td>
                             <input type="text" name="ms_platinum_description_title"
                                 value="<?php echo esc_attr(get_option('ms_platinum_description_title')); ?>" style="width: 500px;" />
-                            <textarea name="ms_platinum_description_content" id="" style="width: 500px; height: 300px;"><?=get_option('ms_platinum_description_content')?></textarea>
+                            <textarea name="ms_platinum_description_content" id="" style="width: 500px; height: 200px;"><?=get_option('ms_platinum_description_content')?></textarea>
                         </td>
                     </tr>
                     <tr>
@@ -168,7 +168,7 @@ function woocommerce_membership_setting_page()
                         <td>
                             <input type="text" name="ms_gold_description_title"
                                 value="<?php echo esc_attr(get_option('ms_gold_description_title')); ?>" style="width: 500px;" />
-                            <textarea name="ms_gold_description_content" id="" style="width: 500px; height: 300px;"><?=get_option('ms_gold_description_content')?></textarea>
+                            <textarea name="ms_gold_description_content" id="" style="width: 500px; height: 200px;"><?=get_option('ms_gold_description_content')?></textarea>
                         </td>
                     </tr>
                     <tr>
@@ -176,7 +176,7 @@ function woocommerce_membership_setting_page()
                         <td>
                             <input type="text" name="ms_silver_description_title"
                                 value="<?php echo esc_attr(get_option('ms_silver_description_title')); ?>" style="width: 500px;" />
-                            <textarea name="ms_silver_description_content" id="" style="width: 500px; height: 300px;"><?=get_option('ms_silver_description_content')?></textarea>
+                            <textarea name="ms_silver_description_content" id="" style="width: 500px; height: 200px;"><?=get_option('ms_silver_description_content')?></textarea>
                         </td>
                     </tr>
                 </tbody>
@@ -220,6 +220,77 @@ function woocommerce_membership_setting_page()
                     <tr>
                         <td><strong>Platinum Membership</strong></td>
                         <td><input type="number" name="member-privileges-platinum" value="<?php echo esc_attr(get_option('member-privileges-platinum', 30)); ?>" /> %</td>
+                    </tr>
+                </tbody>
+            </table>
+            <br>
+            <h1>⭐ ส่วนลดสำหรับ Brand พิเศษ</h1>
+            <table class="wp-list-table widefat fixed striped" style="margin-top: 20px;">
+                <thead>
+                    <tr>
+                        <th>รายการ</th>
+                        <th colspan="2">ตั้งค่า</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>เปิดใช้งาน Brand Privilege:</strong></td>
+                        <td colspan="2">
+                            <select name="brands_privilege_enable" id="">
+                                <option value="yes" <?php selected(get_option('brands_privilege_enable', 'no'), 'yes'); ?>>เปิดใช้งาน</option>
+                                <option value="no" <?php selected(get_option('brands_privilege_enable', 'no'), 'no'); ?>>ปิดใช้งาน</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>รายชื่อ Slug Brand ที่อยู่ในโปรโมชั่น:</strong></td>
+                        <td colspan="2"><textarea name="brands_privilege_list" /><?php echo esc_attr(get_option('brands_privilege_list')); ?></textarea></td>
+                    </tr>
+                    <tr>
+                        <td><strong>ส่วนลดระดับที่ 1</strong></td>
+                        <td>
+                            <input type="number" name="brands_privilege_step_01_start" value="<?php echo esc_attr(get_option('brands_privilege_step_01_start')); ?>" />
+                            -
+                            <input type="number" name="brands_privilege_step_01_end" value="<?php echo esc_attr(get_option('brands_privilege_step_01_end')); ?>" />
+                            บาท
+                        </td>
+                        <td>
+                            ลดเป็นจำนวนร้อยละ <input type="number" name="brands_privilege_step_01_discount_percent" value="<?php echo esc_attr(get_option('brands_privilege_step_01_discount_percent', 2)); ?>" /> %
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>ส่วนลดระดับที่ 2</strong></td>
+                        <td>
+                            <input type="number" name="brands_privilege_step_02_start" value="<?php echo esc_attr(get_option('brands_privilege_step_02_start')); ?>" />
+                            -
+                            <input type="number" name="brands_privilege_step_02_end" value="<?php echo esc_attr(get_option('brands_privilege_step_02_end')); ?>" />
+                            บาท
+                        </td>
+                        <td>
+                            ลดเป็นจำนวนร้อยละ <input type="number" name="brands_privilege_step_02_discount_percent" value="<?php echo esc_attr(get_option('brands_privilege_step_02_discount_percent', 3)); ?>" /> %
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>ส่วนลดระดับที่ 3</strong></td>
+                        <td>
+                            <input type="number" name="brands_privilege_step_03_start" value="<?php echo esc_attr(get_option('brands_privilege_step_03_start')); ?>" />
+                            -
+                            <input type="number" name="brands_privilege_step_03_end" value="<?php echo esc_attr(get_option('brands_privilege_step_03_end')); ?>" />
+                            บาท
+                        </td>
+                        <td>
+                            ลดเป็นจำนวนร้อยละ <input type="number" name="brands_privilege_step_03_discount_percent" value="<?php echo esc_attr(get_option('brands_privilege_step_03_discount_percent', 4)); ?>" /> %
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>ส่วนลดระดับที่ 4</strong></td>
+                        <td>
+                            > <input type="number" name="brands_privilege_step_04" value="<?php echo esc_attr(get_option('brands_privilege_step_04')); ?>" />
+                            บาท
+                        </td>
+                        <td>
+                            ลดเป็นจำนวนร้อยละ <input type="number" name="brands_privilege_step_04_discount_percent" value="<?php echo esc_attr(get_option('brands_privilege_step_04_discount_percent', 5)); ?>" /> %
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -312,6 +383,25 @@ function membership_tier_settings_init()
     register_setting('membership_settings_group', 'member-privileges-silver-color');
     register_setting('membership_settings_group', 'member-privileges-gold-color');
     register_setting('membership_settings_group', 'member-privileges-platinum-color');
+
+    //Brand Privileges
+    register_setting('membership_settings_group', 'brands_privilege_enable');
+    register_setting('membership_settings_group', 'brands_privilege_list');
+
+    register_setting('membership_settings_group', 'brands_privilege_step_01_start');
+    register_setting('membership_settings_group', 'brands_privilege_step_01_end');
+    register_setting('membership_settings_group', 'brands_privilege_step_01_discount_percent');
+
+    register_setting('membership_settings_group', 'brands_privilege_step_02_start');
+    register_setting('membership_settings_group', 'brands_privilege_step_02_end');
+    register_setting('membership_settings_group', 'brands_privilege_step_02_discount_percent');
+
+    register_setting('membership_settings_group', 'brands_privilege_step_03_start');
+    register_setting('membership_settings_group', 'brands_privilege_step_03_end');
+    register_setting('membership_settings_group', 'brands_privilege_step_03_discount_percent');
+
+    register_setting('membership_settings_group', 'brands_privilege_step_04');
+    register_setting('membership_settings_group', 'brands_privilege_step_04_discount_percent');
 }
 
 // ฟังก์ชันคำนวณและเพิ่มคะแนนเมื่อออเดอร์เสร็จสมบูรณ์
@@ -966,4 +1056,62 @@ function user_score_shortcode() {
 
     return $output;
 }
-add_shortcode('user_score', 'user_score_shortcode');
+add_shortcode('user_score', 'apply_tiered_brand_discount');
+
+add_action('woocommerce_cart_calculate_fees', 'apply_tiered_brand_discount', 20);
+function apply_tiered_brand_discount($cart) {
+    if (is_admin() && !defined('DOING_AJAX')) return;
+
+    if(get_option('brands_privilege_enable', 'no') == 'no') return;
+
+    // --- 1. ตั้งค่าแบรนด์ (Slug ของ product_brand) และเงื่อนไข ---
+    $target_brands = array(explode("\n", get_option('brands_privilege_list'))); //'CHASING', 'Dolphin'
+    $eligible_amount = 0;
+
+    // --- 2. คำนวณยอดรวมเฉพาะสินค้าในแบรนด์ที่กำหนด ---
+    foreach ($cart->get_cart() as $cart_item) {
+        $product_id = $cart_item['product_id'];
+        
+        // เช็คว่าสินค้ามี Taxonomy 'product_brand' ตรงกับที่เรากำหนดไหม
+        // ใช้ has_term( 'slug', 'taxonomy_name', 'product_id' )
+        $is_target_brand = false;
+        foreach ($target_brands as $brand_slug) {
+            if (has_term($brand_slug, 'product_brand', $product_id)) {
+                $is_target_brand = true;
+                break;
+            }
+        }
+
+        if ($is_target_brand) {
+            // line_total คือราคาสินค้า x จำนวน หลังหักส่วนลดคูปองระดับสินค้าแล้ว
+            $eligible_amount += $cart_item['line_total'];
+        }
+    }
+
+    if ($eligible_amount <= 0) return;
+
+    // --- 3. เช็ค Tier ส่วนลดตามยอดสะสมของแบรนด์ ---
+    $discount_percent = 0;
+    if ($eligible_amount >= (int) get_option('brands_privilege_step_01_start', 30000) && $eligible_amount <= (int) get_option('brands_privilege_step_01_end', 50000)) {
+        $discount_percent = (int) get_option('brands_privilege_step_01_discount_percent', 2);
+    } elseif ($eligible_amount >= (int) get_option('brands_privilege_step_02_start', 50001) && $eligible_amount <= (int) get_option('brands_privilege_step_02_end', 70000)) {
+        $discount_percent = (int) get_option('brands_privilege_step_02_discount_percent', 3);
+    } elseif ($eligible_amount >= (int) get_option('brands_privilege_step_03_start', 70001) && $eligible_amount <= (int) get_option('brands_privilege_step_03_end', 100000)) {
+        $discount_percent = (int) get_option('brands_privilege_step_03_discount_percent', 4);
+    } elseif ($eligible_amount > (int) get_option('brands_privilege_step_04', 100000)) {
+        $discount_percent = (int) get_option('brands_privilege_step_04_discount_percent', 5);
+    }
+
+    // --- 4. สั่งลดราคา ---
+    if ($discount_percent > 0) {
+        $discount_total = ($eligible_amount * $discount_percent) / 100;
+        
+        // เพิ่มบรรทัดส่วนลดเข้าไป (ยอดติดลบ)
+        // ใส่ชื่อแบรนด์รวมๆ หรือระบุว่า Discount ก็ได้ครับ
+        $cart->add_fee(
+            "ส่วนลดพิเศษ: Brand Privilege ($discount_percent%)", 
+            -$discount_total, 
+            false
+        );
+    }
+}
