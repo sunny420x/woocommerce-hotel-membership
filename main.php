@@ -441,7 +441,7 @@ function display_customer_points()
                 <div class="dot <?php echo ($points >= get_option('ms_platinum_score', 30)) ? 'active' : ''; ?>" style="right: 0; position: absolute;"><span class="dot-label">30+</span></div>
             </div>
         </div>
-        <div class="description">
+        <div class="membership-description">
             <div class="card" id="description-silver" style="left: 14.2%; <?php if($points >= get_option('ms_silver_score', 10) && $points < get_option('ms_gold_score', 20)) { echo 'opacity: 1;'; } ?>">
                 <h2><?=get_option('ms_silver_description_title');?></h2>
                 <?=get_option('ms_silver_description_content');?>
