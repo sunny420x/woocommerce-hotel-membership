@@ -147,6 +147,8 @@ function woocommerce_membership_setting_page()
                 </tbody>
             </table>
             <h2>เนื้อหาที่แสดงในการ์ด</h2>
+            หัวข้อการ์ด: <input type="text" name="ms_card_title" value="<?php echo esc_attr(get_option('ms_card_title')); ?>" style="width: 500px;" />
+            <br><br>
             <table class="wp-list-table widefat fixed striped" style="margin-top: 20px;">
                 <thead>
                     <tr>
@@ -402,6 +404,8 @@ function membership_tier_settings_init()
 
     register_setting('membership_settings_group', 'brands_privilege_step_04');
     register_setting('membership_settings_group', 'brands_privilege_step_04_discount_percent');
+
+    register_setting('membership_settings_group', 'ms_card_title');
 }
 
 // ฟังก์ชันคำนวณและเพิ่มคะแนนเมื่อออเดอร์เสร็จสมบูรณ์
@@ -486,63 +490,86 @@ function display_customer_points()
             font-weight: bold;
             color: <?php echo $bar_color;?>;
         }
-        .membership-description #description-platinum::after {
-            border-color: transparent transparent <?php echo esc_attr(get_option('member-privileges-platinum-color')); ?> transparent;
-        }
-        .membership-description #description-gold::after {
-            border-color: transparent transparent <?php echo esc_attr(get_option('member-privileges-gold-color')); ?> transparent;
-        }
-        .membership-description #description-silver::after {
-            border-color: transparent transparent <?php echo esc_attr(get_option('member-privileges-silver-color')); ?> transparent;
-        }
         #description-platinum {
             background: <?php echo esc_attr(get_option('member-privileges-platinum-color')); ?>;
-            opacity: 0.5;
+            background: linear-gradient(0deg,rgba(162, 22, 46, 1) 0%, rgba(162, 22, 46, 1) 50%, rgba(110, 27, 27, 1) 100%);
+            opacity: 0.2;
         }
         #description-gold {
             background: <?php echo esc_attr(get_option('member-privileges-gold-color')); ?>;
-            opacity: 0.5;
+            background: linear-gradient(0deg,rgba(193, 172, 81, 1) 0%, rgba(193, 172, 81, 1) 56%, rgba(158, 138, 40, 1) 100%);
+            opacity: 0.2;
         }
         #description-silver {
             background: <?php echo esc_attr(get_option('member-privileges-silver-color')); ?>;
-            opacity: 0.5;
+            background: linear-gradient(0deg,rgba(87, 86, 86, 1) 0%, rgba(140, 137, 137, 1) 56%, rgba(179, 179, 179, 1) 100%);
+            opacity: 0.2;
         }
     </style>
-    <div class="rewards-container">
-        <div class="points-header">
-            <div>
-                <span style="display:block; color:#888; font-size:16px;">คะแนนสะสมและระดับ Membership</span>
-                <span style="display:block; color:#888; font-size:14px;">(ซื้อครบ <?=number_format(get_option('membership_point_per_baht', 500))?> บาท = 1 คะแนน)</span>
-                <span class="points-value" id="user_score"><?php echo number_format($points); ?></span> <small>คะแนน</small>
-            </div>
-            <div style="text-align: right; font-size: 14px; color: #aaa;"><?php
-                    if($points < get_option('ms_silver_score', 10)) echo "อีก " . (10 - $points) . " คะแนนเพื่อเป็นระดับ Silver และรับส่วนลด 1% เมื่อซื้อสินค้าผ่านเว็บไซต์";
-                    elseif($points < get_option('ms_gold_score', 20)) echo "อีก " . (20 - $points) . " คะแนนเพื่อเป็นระดับ Gold และรับส่วนลด 2% เมื่อซื้อสินค้าผ่านเว็บไซต์";
-                    elseif($points < get_option('ms_platinum_score', 30)) echo "อีก " . (30 - $points) . " คะแนนเพื่อเป็นระดับ Platinum และรับส่วนลด 3% เมื่อซื้อสินค้าผ่านเว็บไซต์";
-                    else echo "คุณอยู่ในระดับ Platinum เรียบร้อยแล้ว!";
-            ?></div></div>
-
-        <div class="progress-track">
-            <div class="progress-fill" style="width: <?php echo $percentage; ?>%;"></div>
-            <div class="milestones">
-                <div class="dot active"><span class="dot-label">0</span></div>
-                <div class="dot <?php echo ($points >= get_option('ms_silver_score', 10)) ? 'active' : ''; ?>" style="left: 33.33%; position: absolute;"><span class="dot-label">10</span></div>
-                <div class="dot <?php echo ($points >= get_option('ms_gold_score', 20)) ? 'active' : ''; ?>" style="left: 66.66%; position: absolute;"><span class="dot-label">20</span></div>
-                <div class="dot <?php echo ($points >= get_option('ms_platinum_score', 30)) ? 'active' : ''; ?>" style="right: 0; position: absolute;"><span class="dot-label">30+</span></div>
-            </div>
-        </div>
-        <div class="membership-description">
-            <div class="card" id="description-silver" style="left: 14.2%; <?php if($points >= get_option('ms_silver_score', 10) && $points < get_option('ms_gold_score', 20)) { echo 'opacity: 1;'; } ?>">
-                <h2><?=get_option('ms_silver_description_title');?></h2>
-                <?=get_option('ms_silver_description_content');?>
-            </div>
-            <div class="card" id="description-gold" style="left: 24%; <?php if($points >= get_option('ms_gold_score', 20) && $points < get_option('ms_platinum_score', 30)) { echo 'opacity: 1;'; } ?>">
-                <h2><?=get_option('ms_gold_description_title');?></h2>
-                <?=get_option('ms_gold_description_content');?>
-            </div>
-            <div class="card" id="description-platinum" style="left: 30%; <?php if($points >= get_option('ms_platinum_score', 30)) { echo 'opacity: 1;'; } ?>">
-                <h2><?=get_option('ms_platinum_description_title');?></h2>
-                <?=get_option('ms_platinum_description_content');?>
+    <div class="accordion" id="membership">
+        <div class="card">
+            <div class="card-header"><button class="btn btn-link" data-toggle="collapse" data-target="#membershipAccordion" aria-expanded="true" aria-controls="membershipAccordion">👑 คะแนนสะสมและระดับ Membership</button></h5></div>
+            <div id="membershipAccordion" class="collapse show" data-parent="#membership">
+            <div class="card-body">
+                <div class="rewards-container">
+                    <div class="points-header">
+                        <div>
+                            <span style="display:block; color:#888; font-size:16px;">คะแนนสะสมและระดับ Membership</span>
+                            <span style="display:block; color:#888; font-size:14px;">(ซื้อครบ <?=number_format(get_option('membership_point_per_baht', 500))?> บาท = 1 คะแนน)</span>
+                            <span class="points-value" id="user_score"><?php echo number_format($points); ?></span> <small>คะแนน</small>
+                        </div>
+                        <div style="text-align: right; font-size: 14px; color: #aaa;"><?php
+                                if($points < get_option('ms_silver_score', 10)) echo "อีก " . (10 - $points) . " คะแนนเพื่อเป็นระดับ Silver และรับส่วนลด 1% เมื่อซื้อสินค้าผ่านเว็บไซต์";
+                                elseif($points < get_option('ms_gold_score', 20)) echo "อีก " . (20 - $points) . " คะแนนเพื่อเป็นระดับ Gold และรับส่วนลด 2% เมื่อซื้อสินค้าผ่านเว็บไซต์";
+                                elseif($points < get_option('ms_platinum_score', 30)) echo "อีก " . (30 - $points) . " คะแนนเพื่อเป็นระดับ Platinum และรับส่วนลด 3% เมื่อซื้อสินค้าผ่านเว็บไซต์";
+                                else echo "คุณอยู่ในระดับ Platinum เรียบร้อยแล้ว!";
+                        ?></div></div>
+            
+                    <div class="progress-track">
+                        <div class="progress-fill" style="width: <?php echo $percentage; ?>%;"></div>
+                        <div class="milestones">
+                            <div class="dot active"><span class="dot-label">0</span></div>
+                            <div class="dot <?php echo ($points >= get_option('ms_silver_score', 10)) ? 'active' : ''; ?>" style="left: 33.33%; position: absolute;"><span class="dot-label">10</span></div>
+                            <div class="dot <?php echo ($points >= get_option('ms_gold_score', 20)) ? 'active' : ''; ?>" style="left: 66.66%; position: absolute;"><span class="dot-label">20</span></div>
+                            <div class="dot <?php echo ($points >= get_option('ms_platinum_score', 30)) ? 'active' : ''; ?>" style="right: 0; position: absolute;"><span class="dot-label">30+</span></div>
+                        </div>
+                    </div>
+                    <div class="membership-description">
+                        <div class="card" id="description-silver" style="left: 0%; <?php if($points >= get_option('ms_silver_score', 10) && $points < get_option('ms_gold_score', 20)) { echo 'opacity: 1;'; } ?>">
+                            <div class="card_header">
+                                <span class="card_logo"><?=get_option('ms_card_title');?></span>
+                                <h2 id="silver"><?=get_option('ms_silver_description_title');?></h2>
+                            </div>
+                            <span class="display_name"><?=wp_get_current_user()->display_name?></span><span class="card_number">1155 1854 7745</span>
+                            <?=get_option('ms_silver_description_content');?>
+                            <div class="card_points">
+                                <span class="points"><?=$points?></span><span class="text">Points</span>
+                            </div>
+                        </div>
+                        <div class="card" id="description-gold" style="left: 0%; <?php if($points >= get_option('ms_gold_score', 20) && $points < get_option('ms_platinum_score', 30)) { echo 'opacity: 1;'; } ?>">
+                            <div class="card_header">
+                                <span class="card_logo"><?=get_option('ms_card_title');?></span>
+                                <h2 id="gold"><?=get_option('ms_gold_description_title');?></h2>
+                            </div>
+                            <span class="display_name"><?=wp_get_current_user()->display_name?></span><span class="card_number">1155 1854 7745</span>
+                            <?=get_option('ms_gold_description_content');?>
+                            <div class="card_points">
+                                <span class="points"><?=$points?></span><span class="text">Points</span>
+                            </div>
+                        </div>
+                        <div class="card" id="description-platinum" style="left: 0%; <?php if($points >= get_option('ms_platinum_score', 30)) { echo 'opacity: 1;'; } ?>">
+                            <div class="card_header">
+                                <span class="card_logo"><?=get_option('ms_card_title');?></span>
+                                <h2 id="platinum"><?=get_option('ms_platinum_description_title');?></h2>
+                            </div>
+                            <span class="display_name"><?=wp_get_current_user()->display_name?></span><span class="card_number">1155 1854 7745</span>
+                            <?=get_option('ms_platinum_description_content');?>
+                            <div class="card_points">
+                                <span class="points"><?=$points?></span><span class="text">Points</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -628,56 +655,63 @@ function redeem_form_in_my_account()
     ));
 
     ?>
-    <div class="redeem-container" style="background:#fff; border-radius:8px; padding:25px; margin-bottom:30px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);">
-        <h2 style="margin-top:0; color:#333;">🎁 แลกคะแนนเป็นส่วนลด</h2>
-        <p style="color:#666; font-size:14px;">คะแนนปัจจุบัน: <strong id="current-user-score"
-                style="color:#27ae60; font-size:18px;"><?php echo number_format($score); ?></strong> คะแนน (1 คะแนน = <?=number_format(get_option('membership_baht_per_point', 1));?> บาท)
-        </p>
+    <div class="accordion" id="redeem">
+        <div class="card">
+            <div class="card-header"><button class="btn btn-link" data-toggle="collapse" data-target="#redeemAccordion" aria-expanded="true" aria-controls="redeemAccordion">🎁 แลกคะแนนเป็นส่วนลด</button>
+            </div>
+            <div id="redeemAccordion" class="collapse show" data-parent="#redeem">
+            <div class="card-body">
+                <div class="redeem-container" style="background:#fff; border-radius:8px; padding:25px; margin-bottom:30px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);">
+                    <p style="color:#666; font-size:14px;">คะแนนปัจจุบัน: <strong id="current-user-score"
+                            style="color:#27ae60; font-size:18px;"><?php echo number_format($score); ?></strong> คะแนน (1 คะแนน = <?=number_format(get_option('membership_baht_per_point', 1));?> บาท)
+                    </p>
 
-        <div style="display:flex; gap:10px; margin-top:15px;">
-            <input type="number" id="redeem-amount" placeholder="ระบุจำนวนคะแนนที่ต้องการแลก" min="1" max="<?php echo $score; ?>"
-                style="flex-grow:1; padding:10px; border:1px solid #ddd; border-radius:4px;">
-            <button id="redeem-btn" class="button button-primary">แลกโค้ดส่วนลด</button>
+                    <div style="display:flex; gap:10px; margin-top:15px;">
+                        <input type="number" id="redeem-amount" placeholder="ระบุจำนวนคะแนนที่ต้องการแลก" min="1" max="<?php echo $score; ?>"
+                            style="flex-grow:1; padding:10px; border:1px solid #ddd; border-radius:4px;">
+                        <button id="redeem-btn" class="button button-primary">แลกโค้ดส่วนลด</button>
+                    </div>
+                    <div id="redeem-result" style="margin-top:15px; display:none;"></div>
+
+                    <?php
+                    $history = $wpdb->get_results( $wpdb->prepare(
+                        "SELECT * FROM {$wpdb->prefix}redeem_history WHERE user_id = %d ORDER BY created_at DESC",
+                        $user_id
+                    ) );
+
+                    if ( $history ) { ?>
+                    <div style="overflow: auto;">
+                        <table style="width: 100%; border-collapse: collapse; margin-top:15px; white-space: nowrap;">
+                            <thead>
+                                <tr style="background:#f8f8f8;">
+                                    <th style="padding:10px; border-bottom:1px solid #ddd;">วันที่</th>
+                                    <th style="padding:10px; border-bottom:1px solid #ddd;">โค้ด</th>
+                                    <th style="padding:10px; border-bottom:1px solid #ddd;">คะแนนที่ใช้</th>
+                                    <th style="padding:10px; border-bottom:1px solid #ddd;">สถานะ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($history as $row) : 
+                                    // เช็คสถานะจริงจาก WooCommerce อีกทีเพื่อความชัวร์
+                                    $c = new WC_Coupon($row->coupon_code);
+                                    $display_status = ($c->get_usage_count() > 0) ? 'ใช้แล้ว' : 'ยังไม่ได้ใช้';
+                                    $status_color = ($c->get_usage_count() > 0) ? '#999' : '#27ae60';
+                                ?>
+                                    <tr>
+                                        <td style="padding:10px; border-bottom:1px solid #eee; text-align:center;"><?php echo date('j M Y', strtotime($row->created_at)); ?></td>
+                                        <td style="padding:10px; border-bottom:1px solid #eee; text-align:center;"><code><?php echo $row->coupon_code; ?></code></td>
+                                        <td style="padding:10px; border-bottom:1px solid #eee; text-align:center;"><?php echo number_format($row->points_used); ?></td>
+                                        <td style="padding:10px; border-bottom:1px solid #eee; text-align:center; color:<?php echo $status_color; ?>;"><?php echo $display_status; ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <?php } ?>
+                </div>
+            </div>
         </div>
-        <div id="redeem-result" style="margin-top:15px; display:none;"></div>
     </div>
-
-    <?php
-
-    $history = $wpdb->get_results( $wpdb->prepare(
-        "SELECT * FROM {$wpdb->prefix}redeem_history WHERE user_id = %d ORDER BY created_at DESC",
-        $user_id
-    ) );
-
-    if ( $history ) { ?>
-    <div style="overflow: auto;">
-        <table style="width: 100%; border-collapse: collapse; margin-top:15px; white-space: nowrap;">
-            <thead>
-                <tr style="background:#f8f8f8;">
-                    <th style="padding:10px; border-bottom:1px solid #ddd;">วันที่</th>
-                    <th style="padding:10px; border-bottom:1px solid #ddd;">โค้ด</th>
-                    <th style="padding:10px; border-bottom:1px solid #ddd;">คะแนนที่ใช้</th>
-                    <th style="padding:10px; border-bottom:1px solid #ddd;">สถานะ</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($history as $row) : 
-                    // เช็คสถานะจริงจาก WooCommerce อีกทีเพื่อความชัวร์
-                    $c = new WC_Coupon($row->coupon_code);
-                    $display_status = ($c->get_usage_count() > 0) ? 'ใช้แล้ว' : 'ยังไม่ได้ใช้';
-                    $status_color = ($c->get_usage_count() > 0) ? '#999' : '#27ae60';
-                ?>
-                    <tr>
-                        <td style="padding:10px; border-bottom:1px solid #eee; text-align:center;"><?php echo date('j M Y', strtotime($row->created_at)); ?></td>
-                        <td style="padding:10px; border-bottom:1px solid #eee; text-align:center;"><code><?php echo $row->coupon_code; ?></code></td>
-                        <td style="padding:10px; border-bottom:1px solid #eee; text-align:center;"><?php echo number_format($row->points_used); ?></td>
-                        <td style="padding:10px; border-bottom:1px solid #eee; text-align:center; color:<?php echo $status_color; ?>;"><?php echo $display_status; ?></td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    </div>
-    <?php } ?>
 
     <script>
         jQuery(document).ready(function ($) {

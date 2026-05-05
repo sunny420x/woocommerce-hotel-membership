@@ -88,7 +88,8 @@
 }
 
 .membership-description .card {
-    width: 200px;
+    width: 400px;
+    height: 170px;
     padding: 10px 20px;
     background: #f8f8f8;
     border-radius: 20px;
@@ -96,15 +97,89 @@
     color: #fff;
 }
 
-.membership-description .card h2 {
+.membership-description .card p {
     margin: 0;
+}
+
+.membership-description .card .card_header {
+    display: flex;
+}
+
+.membership-description .card .card_header .card_logo {
+    font-size: 22px;
+    margin: 10px 0 0 0;
     color: #fff;
     font-weight: 500;
+}
+
+.membership-description .card .card_header h2 {
+    margin: 0;
+    font-weight: 500;
+    text-align: right;
+    width: 100%;
+}
+
+.membership-description .card .card_header h2#platinum {
+    color: #ebcfd3;
+}
+
+.membership-description .card .card_header h2#gold {
+    color: #f2eaca;
+}
+
+.membership-description .card .card_header h2#silver {
+    color: #e7e7e7;
+}
+
+.membership-description .card .card_points {
+    position: relative;
+    top: -40px;
+    left: 85%;
+    width: 50px;
+    display: block;
+    line-height: 15px;
+    text-align: center;
+}
+
+.membership-description .card .card_points span.points {
+    font-size: 14px;
+    width: 100%;
+    text-align: center;
+    display: block;
+}
+
+.membership-description .card .card_points span.text {
+    font-size: 12px;
+}
+
+.membership-description .card .display_name {
+    color: #fff;
+    margin: 10px 0 0 0;
+    font-size: 20px;
+    display: block;
+    text-align: center;
+    font-weight: 500;
+}
+
+.membership-description .card .card_number {
+    font-size: 15px;
+    color: #fff;
+    letter-spacing: 4px;
+    width: 100%;
+    text-align: center;
+    display: block;
+    margin: 10px 0 0 0;
 }
 
 .membership-description .card ul {
     padding: 0;
     list-style: none;
+    margin: 10px 0 0 0;
+    line-height: 20px;
+}
+
+.membership-description .card ul li {
+    font-size: 11px;
 }
 
 .membership-description .card::after {
@@ -127,6 +202,10 @@
     }
     .membership-description .card {
         position: static;
-        margin-top: 20px;
+        width: 90%;
+        margin: 20px auto 0 auto;
+    }
+    .membership-description .card::after {
+        display: none;
     }
 }
