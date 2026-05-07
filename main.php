@@ -1181,3 +1181,39 @@ function apply_tiered_brand_discount($cart) {
         );
     }
 }
+
+add_action('woocommerce_cart_totals_after_order_total', 'display_combined_addon_and_tiered_discount');
+add_action('woocommerce_review_order_after_order_total', 'display_combined_addon_and_tiered_discount');
+
+function display_combined_addon_and_tiered_discount() {
+    $total_discount = 0;
+
+    // --- 1. ดึงส่วนลดจากคูปอง Add-on (D20-) ---
+    $applied_coupons = WC()->cart->get_applied_coupons();
+    if (!empty($applied_coupons)) {
+        foreach ($applied_coupons as $code) {
+            // ดึงยอดส่วนลดของคูปองใบนั้นๆ มาบวกได้เลย
+            $total_discount += WC()->cart->get_coupon_discount_amount($code);
+        }
+    }
+
+    // --- 2. ดึงส่วนลดจาก Tiered Brand Discount (ที่ส่งมาเป็น Fee) ---
+    // ปกติ Fee ที่ลดราคามันจะเป็นค่าติดลบ เราเลยต้องเอามาบวกแบบค่าสัมบูรณ์ (abs)
+    foreach (WC()->cart->get_fees() as $fee) {
+        if ($fee->amount < 0) {
+            $total_discount += abs($fee->amount);
+        }
+    }
+
+    // --- 3. แสดงผลรวมทั้งหมดที่ประหยัดไปได้ ---
+    if ($total_discount > 0) {
+        ?>
+        <div class="totals-discounts">
+            <div class="title">
+                <span>ประหยัดไปได้ทั้งหมด:</span> 
+                <span class="totals" style="color: red;"><?php echo wc_price($total_discount); ?></span>
+            </div>
+        </div>
+        <?php
+    }
+}   
