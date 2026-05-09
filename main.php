@@ -10,7 +10,6 @@
 if (!defined('ABSPATH'))
     exit;
 
-//Install Menu.
 add_action('admin_menu', 'membership_menu');
 
 function membership_menu()
@@ -26,9 +25,9 @@ function membership_menu()
     );
 }
 
-register_activation_hook( __FILE__, 'worldchem_plugin_install' );
+register_activation_hook( __FILE__, 'woomembership_plugin_install' );
 
-function worldchem_plugin_install() {
+function woomembership_plugin_install() {
     global $wpdb;
 
     $user_table = $wpdb->prefix . 'users';
@@ -155,7 +154,7 @@ function woocommerce_membership_setting_page()
                 ?>
                 <form action="options.php" method="post">
                 <?php
-                settings_fields('membership_settings_group');
+                settings_fields('membership_settings_group_redeem_from_score');
                 ?>
                 <h1>ระบบแลกคะแนนเป็นส่วนลด</h1>
                 <div style="padding: 25px 25px 25px 25px;">
@@ -182,7 +181,7 @@ function woocommerce_membership_setting_page()
                 ?>
                 <form action="options.php" method="post">
                 <?php
-                settings_fields('membership_settings_group');
+                settings_fields('membership_settings_group_member_privilege');
                 ?>
                 <h1>เกณฑ์การคิดคะแนนและให้ส่วนลดทั้งตะกร้า</h1>
                 <div style="padding: 25px 25px 25px 25px;">
@@ -276,7 +275,7 @@ function woocommerce_membership_setting_page()
                 ?>
                 <form action="options.php" method="post">
                 <?php
-                settings_fields('membership_settings_group');
+                settings_fields('membership_settings_group_special_offers');
                 ?>
                 <h1>⭐ ส่วนลดสำหรับสินค้าพิเศษ</h1>
                 <br>
@@ -328,7 +327,7 @@ function woocommerce_membership_setting_page()
                 ?>
                 <form action="options.php" method="post">
                 <?php
-                settings_fields('membership_settings_group');
+                settings_fields('membership_settings_group_brands_privilege');
                 ?>
                 <h1>⭐ ส่วนลดสำหรับ Brand พิเศษ</h1>
                 <div style="padding: 0 25px 25px 25px;">
@@ -483,58 +482,57 @@ add_action('admin_init', 'membership_tier_settings_init');
 
 function membership_tier_settings_init()
 {
-    register_setting('membership_settings_group', 'membership_enable_redeem');
-    register_setting('membership_settings_group', 'membership_point_per_baht');
-    register_setting('membership_settings_group', 'membership_baht_per_point');
+    register_setting('membership_settings_group_redeem_from_score', 'membership_enable_redeem');
+    register_setting('membership_settings_group_redeem_from_score', 'membership_baht_per_point');
     // ลงทะเบียนค่าสำหรับแต่ละ Tier
     // Platinum
-    register_setting('membership_settings_group', 'ms_platinum_score');
-    register_setting('membership_settings_group', 'ms_platinum_discount');
+    register_setting('membership_settings_group_member_privilege', 'membership_point_per_baht');
+    register_setting('membership_settings_group_member_privilege', 'ms_platinum_score');
+    register_setting('membership_settings_group_member_privilege', 'ms_platinum_discount');
     // Gold
-    register_setting('membership_settings_group', 'ms_gold_score');
-    register_setting('membership_settings_group', 'ms_gold_discount');
+    register_setting('membership_settings_group_member_privilege', 'ms_gold_score');
+    register_setting('membership_settings_group_member_privilege', 'ms_gold_discount');
     // Silver
-    register_setting('membership_settings_group', 'ms_silver_score');
-    register_setting('membership_settings_group', 'ms_silver_discount');
+    register_setting('membership_settings_group_member_privilege', 'ms_silver_score');
+    register_setting('membership_settings_group_member_privilege', 'ms_silver_discount');
 
     //Member Privileges Discount
-    register_setting('membership_settings_group', 'membership_enable_member_privileges');
-    register_setting('membership_settings_group', 'member-privileges-slug');
-    register_setting('membership_settings_group', 'member-privileges-silver');
-    register_setting('membership_settings_group', 'member-privileges-gold');
-    register_setting('membership_settings_group', 'member-privileges-platinum');
+    register_setting('membership_settings_group_special_offers', 'membership_enable_member_privileges');
+    register_setting('membership_settings_group_special_offers', 'member-privileges-slug');
+    register_setting('membership_settings_group_special_offers', 'member-privileges-silver');
+    register_setting('membership_settings_group_special_offers', 'member-privileges-gold');
+    register_setting('membership_settings_group_special_offers', 'member-privileges-platinum');
 
-    register_setting('membership_settings_group', 'ms_platinum_description_title');
-    register_setting('membership_settings_group', 'ms_platinum_description_content');
-    register_setting('membership_settings_group', 'ms_gold_description_title');
-    register_setting('membership_settings_group', 'ms_gold_description_content');
-    register_setting('membership_settings_group', 'ms_silver_description_title');
-    register_setting('membership_settings_group', 'ms_silver_description_content');
+    register_setting('membership_settings_group_member_privilege', 'ms_card_title');
+    register_setting('membership_settings_group_member_privilege', 'ms_platinum_description_title');
+    register_setting('membership_settings_group_member_privilege', 'ms_platinum_description_content');
+    register_setting('membership_settings_group_member_privilege', 'ms_gold_description_title');
+    register_setting('membership_settings_group_member_privilege', 'ms_gold_description_content');
+    register_setting('membership_settings_group_member_privilege', 'ms_silver_description_title');
+    register_setting('membership_settings_group_member_privilege', 'ms_silver_description_content');
 
-    register_setting('membership_settings_group', 'member-privileges-silver-color');
-    register_setting('membership_settings_group', 'member-privileges-gold-color');
-    register_setting('membership_settings_group', 'member-privileges-platinum-color');
+    register_setting('membership_settings_group_member_privilege', 'member-privileges-silver-color');
+    register_setting('membership_settings_group_member_privilege', 'member-privileges-gold-color');
+    register_setting('membership_settings_group_member_privilege', 'member-privileges-platinum-color');
 
     //Brand Privileges
-    register_setting('membership_settings_group', 'brands_privilege_enable');
-    register_setting('membership_settings_group', 'brands_privilege_list');
+    register_setting('membership_settings_group_brands_privilege', 'brands_privilege_enable');
+    register_setting('membership_settings_group_brands_privilege', 'brands_privilege_list');
 
-    register_setting('membership_settings_group', 'brands_privilege_step_01_start');
-    register_setting('membership_settings_group', 'brands_privilege_step_01_end');
-    register_setting('membership_settings_group', 'brands_privilege_step_01_discount_percent');
+    register_setting('membership_settings_group_brands_privilege', 'brands_privilege_step_01_start');
+    register_setting('membership_settings_group_brands_privilege', 'brands_privilege_step_01_end');
+    register_setting('membership_settings_group_brands_privilege', 'brands_privilege_step_01_discount_percent');
 
-    register_setting('membership_settings_group', 'brands_privilege_step_02_start');
-    register_setting('membership_settings_group', 'brands_privilege_step_02_end');
-    register_setting('membership_settings_group', 'brands_privilege_step_02_discount_percent');
+    register_setting('membership_settings_group_brands_privilege', 'brands_privilege_step_02_start');
+    register_setting('membership_settings_group_brands_privilege', 'brands_privilege_step_02_end');
+    register_setting('membership_settings_group_brands_privilege', 'brands_privilege_step_02_discount_percent');
 
-    register_setting('membership_settings_group', 'brands_privilege_step_03_start');
-    register_setting('membership_settings_group', 'brands_privilege_step_03_end');
-    register_setting('membership_settings_group', 'brands_privilege_step_03_discount_percent');
+    register_setting('membership_settings_group_brands_privilege', 'brands_privilege_step_03_start');
+    register_setting('membership_settings_group_brands_privilege', 'brands_privilege_step_03_end');
+    register_setting('membership_settings_group_brands_privilege', 'brands_privilege_step_03_discount_percent');
 
-    register_setting('membership_settings_group', 'brands_privilege_step_04');
-    register_setting('membership_settings_group', 'brands_privilege_step_04_discount_percent');
-
-    register_setting('membership_settings_group', 'ms_card_title');
+    register_setting('membership_settings_group_brands_privilege', 'brands_privilege_step_04');
+    register_setting('membership_settings_group_brands_privilege', 'brands_privilege_step_04_discount_percent');
 }
 
 // ฟังก์ชันคำนวณและเพิ่มคะแนนเมื่อออเดอร์เสร็จสมบูรณ์
@@ -1251,7 +1249,7 @@ function user_score_shortcode() {
 
     return $output;
 }
-add_shortcode('user_score', 'apply_tiered_brand_discount');
+add_shortcode('user_score', 'user_score_shortcode');
 
 add_action('woocommerce_cart_calculate_fees', 'apply_tiered_brand_discount', 20);
 function apply_tiered_brand_discount($cart) {
@@ -1345,4 +1343,4 @@ function display_combined_addon_and_tiered_discount() {
         </div>
         <?php
     }
-}   
+}
