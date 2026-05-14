@@ -1413,6 +1413,12 @@ function add_level_color_to_user_icon() {
             border-radius: 10px;
             text-transform: capitalize;
         }
+        .sticky .user-level-badge {
+            display: none;
+        }
+        .header-mobile .user-level-badge {
+            display: none;
+        }
         .silver.user-level-badge {
             background: <?=get_option('member-privileges-silver-color')?>;
         }
