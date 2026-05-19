@@ -83,13 +83,13 @@
 }
 
 .membership-description {
-    display: flex;
+    display: grid;
     margin-top: 50px;
     gap: 20px;
+    grid-template-columns: 1fr 1fr 1fr;
 }
 
 .membership-description .card {
-    width: 400px;
     height: 170px;
     padding: 10px 20px;
     background: #f8f8f8;
@@ -204,7 +204,7 @@
     filter: drop-shadow(0 -2px 2px rgba(0, 0, 0, 0.05));
 }
 
-@media screen and (max-width: 900px) {
+@media screen and (max-width: 768px) {
     .membership-score {
         margin: 20px;
     }
@@ -213,7 +213,7 @@
     }
     .membership-description .card {
         position: static;
-        width: 90%;
+        width: 80%;
         margin: 20px auto 0 auto;
     }
     .membership-description .card::after {
