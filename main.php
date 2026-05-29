@@ -634,8 +634,21 @@ function woocommerce_membership_setting_page()
                             global $wpdb;
                             $redeem_history_table = $wpdb->prefix . "redeem_history";
                             $user_table = $wpdb->users;
-                            $redeem_history = $wpdb->get_results("SELECT r.id, u.display_name, r.coupon_code, r.points_used, r.status, r.created_at, r.user_id 
-                            FROM $redeem_history_table as r JOIN $user_table as u ON u.ID = r.user_id ORDER BY r.created_at DESC");
+
+                            $redeem_query = "SELECT r.id, u.display_name, r.coupon_code, r.points_used, r.status, r.created_at, r.user_id 
+                            FROM $redeem_history_table as r 
+                            JOIN $user_table as u ON u.ID = r.user_id ";
+
+                            if (isset($_GET['from']) && isset($_GET['to'])) {
+                                $from = sanitize_text_field($_GET['from']);
+                                $to   = sanitize_text_field($_GET['to']);
+                                
+                                $redeem_query .= " WHERE r.created_at BETWEEN '$from' AND '$to' ";
+                            }
+
+                            $redeem_query .= " ORDER BY r.created_at DESC";
+
+                            $redeem_history = $wpdb->get_results($redeem_query);
 
                             foreach($redeem_history as $row) {
                             ?>
