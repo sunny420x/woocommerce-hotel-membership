@@ -142,11 +142,12 @@ function woocommerce_membership_setting_page()
         <div style="display: flex;">
             <div class="leftside">
                 <h1>WooCommerce Membership</h1>
-                <a href="/wp-admin/admin.php?page=woocommerce-membership-settings&option=member_privilege">คะแนนและระดับของสมาชิก</a>
-                <a href="/wp-admin/admin.php?page=woocommerce-membership-settings&option=redeem_from_score">แลกคะแนนเป็นส่วนลด</a>
-                <a href="/wp-admin/admin.php?page=woocommerce-membership-settings&option=special_offers">ส่วนลดสำหรับสินค้าพิเศษ</a>
-                <a href="/wp-admin/admin.php?page=woocommerce-membership-settings&option=brands_privilege">ส่วนลดสำหรับ Brand พิเศษ</a>
-                <a href="/wp-admin/admin.php?page=woocommerce-membership-settings&option=members">สมาชิกทั้งหมด</a>
+                <a href="/wp-admin/admin.php?page=woocommerce-membership-settings&option=statistic">📊 สถิติการใช้งาน</a>
+                <a href="/wp-admin/admin.php?page=woocommerce-membership-settings&option=member_privilege">🏆 คะแนนและระดับของสมาชิก</a>
+                <a href="/wp-admin/admin.php?page=woocommerce-membership-settings&option=redeem_from_score">🏷️ แลกคะแนนเป็นส่วนลด</a>
+                <a href="/wp-admin/admin.php?page=woocommerce-membership-settings&option=special_offers">🎁 ส่วนลดสำหรับสินค้าพิเศษ</a>
+                <a href="/wp-admin/admin.php?page=woocommerce-membership-settings&option=brands_privilege">🤝 ส่วนลดสำหรับ Brand พิเศษ</a>
+                <a href="/wp-admin/admin.php?page=woocommerce-membership-settings&option=members">👥 สมาชิกทั้งหมด</a>
             </div>
             <div class="container">
                 <?php
@@ -465,6 +466,137 @@ function woocommerce_membership_setting_page()
                                 </tr>
                                 <?php
                             }
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
+                <?php
+                } elseif(isset($_GET['option']) && $_GET['option'] == "statistic") {
+                    $args = array(
+                        'limit' => -1,
+                        'status' => ['wc-completed', 'wc-processing']
+                    );
+
+                    $orders = wc_get_orders($args);
+                    $privilege_orders = [];
+
+                    foreach ($orders as $order) {
+                        // วนลูปเช็ค Fee ในแต่ละออเดอร์
+                        foreach ($order->get_items('fee') as $item_id => $item) {
+                            $fee_name = $item->get_name();
+                            $order_date = $order->get_date_created()->date('Y-m-d');
+                            
+                            // เช็คชื่อ Fee ให้ตรงกับที่มึงแอดไว้ (แนะนำให้เช็คด้วย strpos กันเหนียว)
+                            if (strpos($fee_name, 'ส่วนลดพิเศษ: Brand Privilege') !== false) {
+                                $privilege_orders[] = [
+                                    'order_id' => $order->get_id(),
+                                    'fee_name' => $fee_name,
+                                    'amount'   => $item->get_total(), // ยอดที่ลดไป
+                                    'total'    => $order->get_formatted_order_total(),
+                                    'total_amount'    => $order->get_total(),
+                                    'date'     => $order_date
+                                ];
+                            }
+                        }
+                    }
+                ?>
+                <h1>จำนวนผู้ใช้สิทธิพิเศษ (<?=count($privilege_orders)?> คำสั่งซื้อ)</h1>
+                <div style="padding: 25px;">
+                    <?php
+                    $combined = [];
+                    foreach ($privilege_orders as $row) {
+                        $date = $row['date'];
+                        $amount = abs($row['amount']);
+                        
+                        if (!isset($combined[$date])) {
+                            $combined[$date] = 0;
+                        }
+                        $combined[$date] += $amount;
+                    }
+
+                    // เรียงลำดับวันที่จาก เก่า -> ใหม่ ด้วย ksort
+                    ksort($combined);
+
+                    // แยก Key (วันที่) และ Value (ยอดเงิน) ออกมาเป็น Array
+                    $chart_labels = array_keys($combined);
+                    $chart_data   = array_values($combined);
+                    ?>
+                    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+                    <canvas id="memberPrivilegeChart"></canvas>
+                    <br><br>
+
+                    <script>
+                    const ctx = document.getElementById('memberPrivilegeChart').getContext('2d');
+
+                    // ดึงข้อมูลจาก PHP มาใส่ JS
+                    const labels = <?php echo json_encode($chart_labels); ?>;
+                    const dataValues = <?php echo json_encode($chart_data); ?>;
+
+                    new Chart(ctx, {
+                        type: 'line', // ถ้าเป็นวันที่ กราฟเส้น (line) จะดูรู้เรื่องกว่ากราฟแท่ง
+                        data: {
+                            labels: <?php echo json_encode($chart_labels); ?>,
+                            datasets: [{
+                                label: 'ส่วนลด (บาท)',
+                                data: <?php echo json_encode($chart_data); ?>,
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                tension: 0.1 // ทำให้เส้นมีความโค้งมน ดูสวยขึ้น
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                    </script>
+                    <?php
+                    // ก้อนที่ 1: รวมส่วนลด (amount)
+                    $total_discount = array_sum(array_map(function($row) {
+                        return abs($row['amount']);
+                    }, $privilege_orders));
+
+                    // ก้อนที่ 2: รวมยอดขาย (total)
+                    $total_sales = array_sum(array_map(function($row) {
+                        return abs($row['total_amount']);
+                    }, $privilege_orders));
+                    ?>
+
+                    <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+                        <div style="padding: 20px; background: #f8f8f8; border-radius: 8px;">
+                            <h3>รวมยอดขายทั้งหมด</h3>
+                            <p style="font-size: 24px; font-weight: bold; color: #2271b1;"><?= number_format($total_sales, 2) ?> บาท</p>
+                        </div>
+                        <div style="padding: 20px; background: #f8f8f8; border-radius: 8px;">
+                            <h3>รวมส่วนลดที่ใช้ไป</h3>
+                            <p style="font-size: 24px; font-weight: bold; color: #d63638;"><?= number_format($total_discount, 2) ?> บาท</p>
+                        </div>
+                    </div>
+                    <table class="wp-list-table widefat fixed striped">
+                        <thead>
+                            <th>หมายเลขคำสั่งซื้อ</th>
+                            <th>วันที่</th>
+                            <th>ส่วนลด</th>
+                            <th>จำนวน</th>
+                            <th>ยอดขาย</th>
+                        </thead>
+                        <tbody>
+                            <?php
+                                foreach($privilege_orders as $row) {
+                                    $order_id = $row['order_id'];
+                            ?>
+                            <tr>
+                                <td><a href="<?=admin_url("post.php?post=$order_id&action=edit")?>" target="_blank"><?=$row['order_id']?></a></td>
+                                <td><?=$row['date']?></td>
+                                <td><?=$row['fee_name']?></td>
+                                <td><?=$row['amount'] * -1 ?></td>
+                                <td><?=$row['total']?></td>
+                            </tr>
+                            <?php
+                                }
                             ?>
                         </tbody>
                     </table>
