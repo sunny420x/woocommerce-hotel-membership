@@ -63,7 +63,7 @@ function woomembership_plugin_install() {
 function woomembership_enqueue_assets()
 {
     wp_enqueue_style(
-        'worldchem-membership-style',
+        'woocommerce-membership-style',
         plugins_url('/css/membership.css', __FILE__),
         array(),
         time(),
