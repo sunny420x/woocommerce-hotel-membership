@@ -60,7 +60,7 @@ function woomembership_plugin_install() {
 }
 
 //Serve Styling.
-function worldchem_enqueue_assets()
+function woomembership_enqueue_assets()
 {
     wp_enqueue_style(
         'worldchem-membership-style',
@@ -70,7 +70,7 @@ function worldchem_enqueue_assets()
         'all'
     );
 }
-add_action('wp_enqueue_scripts', 'worldchem_enqueue_assets');
+add_action('wp_enqueue_scripts', 'woomembership_enqueue_assets');
 
 function woocommerce_membership_setting_page()
 {
