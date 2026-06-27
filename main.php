@@ -199,6 +199,16 @@ function woocommerce_membership_setting_page()
                                 </select>
                             </td>
                         </tr>
+                        <tr>
+                            <td>ซื้อสินค้าชิ้นแรกลดทั้งตะกร้า</td>
+                            <td>
+                                <select name="first_purchase_discount_enable" id="">
+                                    <option value="yes" <?php selected(get_option('first_purchase_discount_enable'), 'yes') ?>>ใช่</option>
+                                    <option value="no" <?php selected(get_option('first_purchase_discount_enable'), 'no') ?>>ไม่ใช่</option>
+                                </select>
+                                ร้อยละ: <input type="number" name="first_purchase_discount_percent" value="<?=get_option('first_purchase_discount_percent', 10)?>"> %
+                            </td>
+                        </tr>
                     </table>
                     <table class="wp-list-table widefat fixed striped" style="margin-top: 20px;">
                         <thead>
@@ -718,6 +728,8 @@ function membership_tier_settings_init()
     register_setting('membership_settings_group_special_offers', 'member-privileges-gold');
     register_setting('membership_settings_group_special_offers', 'member-privileges-platinum');
 
+    register_setting('membership_settings_group_member_privilege', 'first_purchase_discount_enable');
+    register_setting('membership_settings_group_member_privilege', 'first_purchase_discount_percent');
     register_setting('membership_settings_group_member_privilege', 'ms_card_title');
     register_setting('membership_settings_group_member_privilege', 'ms_platinum_description_title');
     register_setting('membership_settings_group_member_privilege', 'ms_platinum_description_content');
@@ -1677,4 +1689,29 @@ function add_level_text_to_user_icon($title, $item, $args, $depth) {
     }
     
     return $title;
+}
+
+//ส่วนลดซื้อครั้งแรก สำหรับลูกค้าใหม่
+add_action( 'woocommerce_cart_calculate_fees', 'apply_first_purchase_discount', 10, 1 );
+
+function apply_first_purchase_discount( $cart ) {
+    if ( is_admin() && ! defined( 'DOING_AJAX' ) ) return;
+
+    if(get_option('first_purchase_discount_enable') != "yes") return;
+
+    if ( ! is_user_logged_in() ) return;
+
+    $user_id = get_current_user_id();
+
+    // 2. ตรวจสอบประวัติการสั่งซื้อ (นับจำนวนคำสั่งซื้อของผู้ใช้)
+    $customer_orders = wc_get_orders( array(
+        'customer' => $user_id,
+        'status'   => array( 'wc-completed', 'wc-processing', 'wc-on-hold' ),
+        'limit'    => 1, // แค่ 1 ก็พอว่าเขาเคยซื้อหรือไม่
+    ) );
+
+    if ( empty( $customer_orders ) ) {
+        $discount = $cart->get_subtotal() * (int) get_option('first_purchase_discount_percent', 10) / 100;
+        $cart->add_fee( __( 'ส่วนลดลูกค้าใหม่ '.get_option('first_purchase_discount_percent', 10).'%', 'woocommerce' ), - $discount );
+    }
 }
