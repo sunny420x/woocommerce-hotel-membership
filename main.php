@@ -69,6 +69,14 @@ function woomembership_enqueue_assets()
         time(),
         'all'
     );
+
+    wp_enqueue_script(
+        'membership-js-handle',
+        plugin_dir_url( __FILE__ ) . '/js/main.js',
+        array(),
+        time(),
+        true
+    );
 }
 add_action('wp_enqueue_scripts', 'woomembership_enqueue_assets');
 
@@ -1746,4 +1754,27 @@ function apply_first_purchase_discount( $cart ) {
         $discount = $cart->get_subtotal() * (int) get_option('first_purchase_discount_percent', 10) / 100;
         $cart->add_fee( __( 'ส่วนลดลูกค้าใหม่ '.get_option('first_purchase_discount_percent', 10).'%', 'woocommerce' ), - $discount );
     }
+}
+
+add_action( 'woocommerce_before_account_navigation', 'add_custom_mobile_member_menu_element' );
+function add_custom_mobile_member_menu_element() {
+    if ( is_user_logged_in() ) {
+        $current_user = wp_get_current_user();
+        $username = $current_user->display_name; 
+    }
+    ?>
+    <div class="mobileMemberMenu" onclick="mobileMemberMenuToggle()">
+        <div style="display: flex; width: 95%;">
+            <img src="<?php echo get_avatar_url( $current_user->ID ); ?>" alt="Profile Picture" style="width: 50px; margin: 0 20px 0 0;">
+            <div>
+                <span style="
+                padding: 12px 0;
+                display: block;
+                font-size: 16px;"><?= esc_html( $username )?></span>
+            </div>
+        </div>
+        <div class="icon">
+        </div>
+    </div>
+    <?php
 }

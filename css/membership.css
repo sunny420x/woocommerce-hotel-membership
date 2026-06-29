@@ -33,7 +33,7 @@
     margin-bottom: 30px;
     padding: 20px;
     background: #fff;
-    
+
     .points-header {
         display: flex;
         justify-content: space-between;
@@ -234,6 +234,10 @@
     user-select: none;
 }
 
+.mobileMemberMenu {
+    display: none;
+}
+
 @media screen and (max-width: 768px) {
     .membership-score {
         margin: 20px;
@@ -251,6 +255,38 @@
         display: none;
     }
     .membership-description .card.active {
+        display: block;
+        max-width: 300px;
+    }
+    .mobileMemberMenu {
+        display: flex;
+        background: #555;
+        color: #fff;
+        cursor: pointer;
+        transition: .2s ease-in-out;
+        margin-bottom: 15px;
+    }
+    .mobileMemberMenu:hover {
+        opacity: 0.8;
+    }
+    .mobileMemberMenu div.icon {
+        width: 5%;
+        height: 50px;
+        display: inline-flex;
+    }
+    .mobileMemberMenu div.icon::after {
+        font-family: FontAwesome;
+        font-weight: 300;
+        content: "\f077";
+        align-content: center;
+    }
+    .mobileMemberMenu.active div.icon::after {
+        content: "\f078";
+    }
+    .woocommerce-MyAccount-navigation {
+        display: none;
+    }
+    .woocommerce-MyAccount-navigation.active {
         display: block;
     }
 }
