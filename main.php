@@ -935,7 +935,7 @@ function display_customer_points()
                             <?php
                             if(get_option('membership_enable_member_privileges', 'no') === "yes") {
                             ?>
-                            <div class="col-lg-3 col-4 privilege_card cursor-pointer" onclick="window.location.href='/product-category/member-privileges/'">
+                            <div class="col-lg-3 col-12 privilege_card cursor-pointer" onclick="window.location.href='/product-category/member-privileges/'">
                                 <h2>🎉 ซื้อสินค้าในราคาพิเศษ</h2>
                                 <p>ซื้อสินค้าที่ร่วมรายการในราคาพิเศษ สำหรับสมาชิก</p>
                             </div>
@@ -945,7 +945,7 @@ function display_customer_points()
                             <?php
                             if(get_option('brands_privilege_enable', 'no') == 'yes') {
                             ?>
-                            <div class="col-lg-3 col-4 privilege_card">
+                            <div class="col-lg-3 col-12 privilege_card">
                                 <h2>🏆 Brands Privilege</h2>
                                 <p>ซื้อสินค้าจากแบรนด์ที่ร่วมรายการในราคาพิเศษ</p>
                             </div>
@@ -955,7 +955,7 @@ function display_customer_points()
                             <?php
                             if(get_option('membership_enable_redeem', 'no') == 'yes') {
                             ?>
-                            <div class="col-lg-3 col-4 privilege_card">
+                            <div class="col-lg-3 col-12 privilege_card">
                                 <h2>✨ แลกคะแนนเป็นส่วนลด</h2>
                                 <p>แลกคะแนนจากการซื้อสินค้าเป็นส่วนลดสำหรับการซื้อครั้งหน้า</p>
                             </div>
