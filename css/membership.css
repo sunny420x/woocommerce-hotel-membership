@@ -88,6 +88,12 @@
     grid-template-columns: 1fr 1fr 1fr;
 }
 
+.membership-description p:empty {
+    display: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
 .membership-description .card {
     height: 170px;
     padding: 10px 20px;
