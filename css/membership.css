@@ -30,8 +30,7 @@
 
 .rewards-container {
     font-family: 'Kanit';
-    margin-bottom: 30px;
-    padding: 20px;
+    padding: 0 20px;
     background: #fff;
 
     .points-header {
@@ -82,10 +81,10 @@
 
 
 .membership-description {
-    display: grid;
+    width: max-content;
+    display: flex;
     margin-top: 50px;
     gap: 20px;
-    grid-template-columns: 1fr 1fr 1fr;
 }
 
 .membership-description p:empty {
@@ -95,6 +94,7 @@
 }
 
 .membership-description .card {
+    width: 261px;
     height: 170px;
     padding: 10px 20px;
     background: #f8f8f8;
@@ -233,6 +233,7 @@
     border-radius: 20px;
     transition: 0.2s ease-in-out;
     background-image: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+    padding: 20px;
 }
 
 .privilege_card.cursor-pointer {

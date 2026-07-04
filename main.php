@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: Membership System For WooCommerce
+ * Plugin Name: Hotel Membership System For WooCommerce
  * Description: ระบบสะสมคะแนน ส่วนลด สิทธิพิเศษ สำหรับสมาชิกเว็บไซต์
  * Author: Jirakit Pawnsakunrungrot
  * Author URI: https://www.linkedin.com/in/sunny-jirakit
@@ -15,8 +15,8 @@ add_action('admin_menu', 'membership_menu');
 function membership_menu()
 {
     add_menu_page(
-        'Membership Settings', // Title ของหน้า
-        'ระบบ Membership', // ชื่อเมนูที่โชว์ในแถบข้าง
+        'Hotel Membership Settings', // Title ของหน้า
+        'ระบบ Hotel Membership', // ชื่อเมนูที่โชว์ในแถบข้าง
         'manage_options', //สิทธิ์การเข้าถึง (Admin)
         'woocommerce-membership-settings', // Slug ของหน้า
         'woocommerce_membership_setting_page', // ฟังก์ชันที่ใช้พ่น HTML หน้า Setting
@@ -24,6 +24,17 @@ function membership_menu()
         '80' // ตำแหน่งเมนู
     );
 }
+
+function enqueue_font_awesome_v4() {
+    wp_enqueue_style(
+        'font-awesome-v4', 
+        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css', 
+        array(), 
+        '4.7.0'
+    );
+}
+add_action('wp_enqueue_scripts', 'enqueue_font_awesome_v4');
+
 
 register_activation_hook( __FILE__, 'woomembership_plugin_install' );
 
@@ -138,8 +149,8 @@ function woocommerce_membership_setting_page()
     <div class="white-label-zone no-print">
         <span style="padding: 60px 10px 60px 40px;float: left;font-size: 60px;">👑</span>
         <div style="padding: 20px 0;">
-            <h1>WooCommerce Membership</h1>
-            <p>ระบบสิทธิพิเศษ Membership สำหรับ WooCommerce บน WordPress ประกอบไปด้วย คะแนนและระดับของสมาชิก แลกคะแนนเป็นส่วนลด ส่วนลดสำหรับสินค้าพิเศษ ส่วนลดสำหรับ Brand พิเศษ เป็นต้น
+            <h1>Hotel Membership</h1>
+            <p>ระบบสิทธิพิเศษ Hotel Membership สำหรับ WooCommerce บน WordPress ประกอบไปด้วย คะแนนและระดับของสมาชิก แลกคะแนนเป็นส่วนลด ส่วนลดสำหรับห้องพิเศษ
                 <br>
                 <strong>Github Repository:</strong> <a href="https://github.com/sunny420x/woocommerce-membership" target="_blank">https://github.com/sunny420x/woocommerce-membership</a>
             </p>
@@ -148,12 +159,11 @@ function woocommerce_membership_setting_page()
     <div class="wrap">
         <div style="display: flex;">
             <div class="leftside">
-                <h1>WooCommerce Membership</h1>
+                <h1>WooCommerce Hotel Membership</h1>
                 <a href="/wp-admin/admin.php?page=woocommerce-membership-settings&option=statistic">📊 สถิติการใช้งาน</a>
                 <a href="/wp-admin/admin.php?page=woocommerce-membership-settings&option=member_privilege">🏆 คะแนนและระดับของสมาชิก</a>
                 <a href="/wp-admin/admin.php?page=woocommerce-membership-settings&option=redeem_from_score">🏷️ แลกคะแนนเป็นส่วนลด</a>
-                <a href="/wp-admin/admin.php?page=woocommerce-membership-settings&option=special_offers">🎁 ส่วนลดสำหรับสินค้าพิเศษ</a>
-                <a href="/wp-admin/admin.php?page=woocommerce-membership-settings&option=brands_privilege">🤝 ส่วนลดสำหรับ Brand พิเศษ</a>
+                <a href="/wp-admin/admin.php?page=woocommerce-membership-settings&option=special_offers">🎁 ส่วนลดสำหรับห้องพิเศษ</a>
                 <a href="/wp-admin/admin.php?page=woocommerce-membership-settings&option=members">👥 สมาชิกทั้งหมด</a>
             </div>
             <div class="container">
@@ -191,24 +201,15 @@ function woocommerce_membership_setting_page()
                 <?php
                 settings_fields('membership_settings_group_member_privilege');
                 ?>
-                <h1>เกณฑ์การคิดคะแนนและให้ส่วนลดทั้งตะกร้า</h1>
+                <h1>เกณฑ์การคิดคะแนนและให้ส่วนลดทุกห้องพัก</h1>
                 <div style="padding: 25px 25px 25px 25px;">
                     <table class="wp-list-table widefat fixed striped">
                         <tr>
-                            <td>ลูกค้าจะได้รับ 1 คะแนนต่อการซื้อ</td>
-                            <td><input type="text" name="membership_point_per_baht" value="<?=get_option('membership_point_per_baht', 500);?>"> บาท</td>
+                            <td>ลูกค้าจะได้รับ 1 คะแนนต่อการเข้าพัก</td>
+                            <td><input type="text" name="membership_point_per_order" value="<?=get_option('membership_point_per_order', 1);?>"> ครั้ง</td>
                         </tr>
                         <tr>
-                            <td>เลือกรับสินค้าเองจะไม่ได้รับส่วนลดตามระดับ</td>
-                            <td>
-                                <select name="no_discount_self_pickup" id="">
-                                    <option value="yes" <?php selected(get_option('no_discount_self_pickup'), 'yes') ?>>ใช่</option>
-                                    <option value="no" <?php selected(get_option('no_discount_self_pickup'), 'no') ?>>ไม่ใช่</option>
-                                </select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>ซื้อสินค้าชิ้นแรกลดทั้งตะกร้า</td>
+                            <td>เข้าพักครั้งแรกลดทุกห้องพัก</td>
                             <td>
                                 <select name="first_purchase_discount_enable" id="">
                                     <option value="yes" <?php selected(get_option('first_purchase_discount_enable'), 'yes') ?>>ใช่</option>
@@ -229,6 +230,17 @@ function woocommerce_membership_setting_page()
                             </tr>
                         </thead>
                         <tbody>
+                            <tr>
+                                <td><strong>Diamond Membership</strong></td>
+                                <td><input type="number" name="ms_diamond_score"
+                                        value="<?php echo esc_attr(get_option('ms_diamond_score', 30)); ?>" /></td>
+                                <td><input type="number" step="0.01" name="ms_diamond_discount"
+                                        value="<?php echo esc_attr(get_option('ms_diamond_discount', 3)); ?>" /> %</td>
+                                <td><input type="text" name="member-privileges-diamond-color"
+                                        value="<?php echo esc_attr(get_option('member-privileges-diamond-color')); ?>" /></td>
+                                <td><input type="text" name="member-privileges-diamond-single-color"
+                                        value="<?php echo esc_attr(get_option('member-privileges-diamond-single-color')); ?>" /></td>
+                            </tr>
                             <tr>
                                 <td><strong>Platinum Membership</strong></td>
                                 <td><input type="number" name="ms_platinum_score"
@@ -275,6 +287,14 @@ function woocommerce_membership_setting_page()
                             </tr>
                         </thead>
                         <tbody>
+                            <tr>
+                                <td><strong>Diamond Membership:</strong></td>
+                                <td>
+                                    <input type="text" name="ms_diamond_description_title"
+                                        value="<?php echo esc_attr(get_option('ms_diamond_description_title')); ?>" style="width: 500px;" />
+                                    <textarea name="ms_diamond_description_content" id="" style="width: 500px; height: 200px;"><?=get_option('ms_diamond_description_content')?></textarea>
+                                </td>
+                            </tr>
                             <tr>
                                 <td><strong>Platinum Membership:</strong></td>
                                 <td>
@@ -350,89 +370,12 @@ function woocommerce_membership_setting_page()
                                 <td><strong>Platinum Membership</strong></td>
                                 <td><input type="number" name="member-privileges-platinum" value="<?php echo esc_attr(get_option('member-privileges-platinum', 30)); ?>" /> %</td>
                             </tr>
-                        </tbody>
-                    </table>
-                    </table>
-                    <?php submit_button('บันทึกการเปลี่ยนแปลง'); ?>
-                </div>
-                </form>
-                <?php
-                } elseif(isset($_GET['option']) && $_GET['option'] == "brands_privilege") {
-                ?>
-                <form action="options.php" method="post">
-                <?php
-                settings_fields('membership_settings_group_brands_privilege');
-                ?>
-                <h1>⭐ ส่วนลดสำหรับ Brand พิเศษ</h1>
-                <div style="padding: 0 25px 25px 25px;">
-                    <table class="wp-list-table widefat fixed striped" style="margin-top: 20px;">
-                        <thead>
                             <tr>
-                                <th>รายการ</th>
-                                <th colspan="2">ตั้งค่า</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong>เปิดใช้งาน Brand Privilege:</strong></td>
-                                <td colspan="2">
-                                    <select name="brands_privilege_enable" id="">
-                                        <option value="yes" <?php selected(get_option('brands_privilege_enable', 'no'), 'yes'); ?>>เปิดใช้งาน</option>
-                                        <option value="no" <?php selected(get_option('brands_privilege_enable', 'no'), 'no'); ?>>ปิดใช้งาน</option>
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>รายชื่อ Slug Brand ที่อยู่ในโปรโมชั่น:</strong></td>
-                                <td colspan="2"><textarea name="brands_privilege_list" /><?php echo esc_attr(get_option('brands_privilege_list')); ?></textarea></td>
-                            </tr>
-                            <tr>
-                                <td><strong>ส่วนลดระดับที่ 1</strong></td>
-                                <td>
-                                    <input type="number" name="brands_privilege_step_01_start" value="<?php echo esc_attr(get_option('brands_privilege_step_01_start')); ?>" />
-                                    -
-                                    <input type="number" name="brands_privilege_step_01_end" value="<?php echo esc_attr(get_option('brands_privilege_step_01_end')); ?>" />
-                                    บาท
-                                </td>
-                                <td>
-                                    ลดเป็นจำนวนร้อยละ <input type="number" name="brands_privilege_step_01_discount_percent" value="<?php echo esc_attr(get_option('brands_privilege_step_01_discount_percent', 2)); ?>" /> %
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>ส่วนลดระดับที่ 2</strong></td>
-                                <td>
-                                    <input type="number" name="brands_privilege_step_02_start" value="<?php echo esc_attr(get_option('brands_privilege_step_02_start')); ?>" />
-                                    -
-                                    <input type="number" name="brands_privilege_step_02_end" value="<?php echo esc_attr(get_option('brands_privilege_step_02_end')); ?>" />
-                                    บาท
-                                </td>
-                                <td>
-                                    ลดเป็นจำนวนร้อยละ <input type="number" name="brands_privilege_step_02_discount_percent" value="<?php echo esc_attr(get_option('brands_privilege_step_02_discount_percent', 3)); ?>" /> %
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>ส่วนลดระดับที่ 3</strong></td>
-                                <td>
-                                    <input type="number" name="brands_privilege_step_03_start" value="<?php echo esc_attr(get_option('brands_privilege_step_03_start')); ?>" />
-                                    -
-                                    <input type="number" name="brands_privilege_step_03_end" value="<?php echo esc_attr(get_option('brands_privilege_step_03_end')); ?>" />
-                                    บาท
-                                </td>
-                                <td>
-                                    ลดเป็นจำนวนร้อยละ <input type="number" name="brands_privilege_step_03_discount_percent" value="<?php echo esc_attr(get_option('brands_privilege_step_03_discount_percent', 4)); ?>" /> %
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>ส่วนลดระดับที่ 4</strong></td>
-                                <td>
-                                    > <input type="number" name="brands_privilege_step_04" value="<?php echo esc_attr(get_option('brands_privilege_step_04')); ?>" />
-                                    บาท
-                                </td>
-                                <td>
-                                    ลดเป็นจำนวนร้อยละ <input type="number" name="brands_privilege_step_04_discount_percent" value="<?php echo esc_attr(get_option('brands_privilege_step_04_discount_percent', 5)); ?>" /> %
-                                </td>
+                                <td><strong>Diamond Membership</strong></td>
+                                <td><input type="number" name="member-privileges-diamond" value="<?php echo esc_attr(get_option('member-privileges-diamond', 40 )); ?>" /> %</td>
                             </tr>
                         </tbody>
+                    </table>
                     </table>
                     <?php submit_button('บันทึกการเปลี่ยนแปลง'); ?>
                 </div>
@@ -443,7 +386,9 @@ function woocommerce_membership_setting_page()
                 <?php
                 function getMemberShipLevel($score)
                 {
-                    if ($score >= (int) get_option('ms_platinum_score', 30)) {
+                    if ($score >= (int) get_option('ms_diamond_score', 40)) {
+                        return "Diamond";
+                    } else if ($score >= (int) get_option('ms_platinum_score', 30)) {
                         return "Platinum";
                     } else if ($score >= (int) get_option('ms_gold_score', 20)) {
                         return "Gold";
@@ -688,11 +633,11 @@ function woocommerce_membership_setting_page()
                 <?php
                 } else {
                 ?>
-                <h1>WooCommerce Membership Plugin</h1>
+                <h1>WooCommerce Hotel Membership Plugin</h1>
                 <div style="padding: 0 25px 25px 25px;">
                     <h2>ระบบนี้คืออะไร ?</h2>
-                    <p>ระบบ WooCommerce Membership คือระบบที่ออกแบบมาเพื่อรองรับการทำการตลาดบนเว็บไซต์ โดยลูกค้าสามารถสะสมคะแนนจากการซื้อสินค้าภายในเว็บไซต์ 
-                        ลูกค้าสามารถรับส่วนลดทั้งตะกร้าตามระดับสมาชิกที่ถูกกำหนดตามเกณฑ์การคิดระดับสมาชิก ลูกค้าจะได้รับส่วนลดสำหรับ Brand พิเศษที่กำหนดไว้โดยคิดตามเกณฑ์ราคา 
+                    <p>ระบบ WooCommerce Hotel Membership คือระบบที่ออกแบบมาเพื่อรองรับการทำการตลาดบนเว็บไซต์ โดยลูกค้าสามารถสะสมคะแนนจากการซื้อสินค้าภายในเว็บไซต์ 
+                        ลูกค้าสามารถรับส่วนลดทุกห้องพักตามระดับสมาชิกที่ถูกกำหนดตามเกณฑ์การคิดระดับสมาชิก ลูกค้าจะได้รับส่วนลดสำหรับห้องพิเศษที่กำหนดไว้โดยคิดตามเกณฑ์ราคา 
                         ลูกค้าสามารถแลกคะแนนเป็นส่วนลด
                     </p>
                     <h2>วิธีการติดตั้ง</h2>
@@ -717,8 +662,11 @@ function membership_tier_settings_init()
     register_setting('membership_settings_group_redeem_from_score', 'membership_enable_redeem');
     register_setting('membership_settings_group_redeem_from_score', 'membership_baht_per_point');
     // ลงทะเบียนค่าสำหรับแต่ละ Tier
+    register_setting('membership_settings_group_member_privilege', 'membership_point_per_order');
+    //Diamond
+    register_setting('membership_settings_group_member_privilege', 'ms_diamond_score');
+    register_setting('membership_settings_group_member_privilege', 'ms_diamond_discount');
     // Platinum
-    register_setting('membership_settings_group_member_privilege', 'membership_point_per_baht');
     register_setting('membership_settings_group_member_privilege', 'ms_platinum_score');
     register_setting('membership_settings_group_member_privilege', 'ms_platinum_discount');
     // Gold
@@ -727,7 +675,6 @@ function membership_tier_settings_init()
     // Silver
     register_setting('membership_settings_group_member_privilege', 'ms_silver_score');
     register_setting('membership_settings_group_member_privilege', 'ms_silver_discount');
-    register_setting('membership_settings_group_member_privilege', 'no_discount_self_pickup');
 
     //Member Privileges Discount
     register_setting('membership_settings_group_special_offers', 'membership_enable_member_privileges');
@@ -735,10 +682,13 @@ function membership_tier_settings_init()
     register_setting('membership_settings_group_special_offers', 'member-privileges-silver');
     register_setting('membership_settings_group_special_offers', 'member-privileges-gold');
     register_setting('membership_settings_group_special_offers', 'member-privileges-platinum');
+    register_setting('membership_settings_group_special_offers', 'member-privileges-diamond');
 
     register_setting('membership_settings_group_member_privilege', 'first_purchase_discount_enable');
     register_setting('membership_settings_group_member_privilege', 'first_purchase_discount_percent');
     register_setting('membership_settings_group_member_privilege', 'ms_card_title');
+    register_setting('membership_settings_group_member_privilege', 'ms_diamond_description_title');
+    register_setting('membership_settings_group_member_privilege', 'ms_diamond_description_content');
     register_setting('membership_settings_group_member_privilege', 'ms_platinum_description_title');
     register_setting('membership_settings_group_member_privilege', 'ms_platinum_description_content');
     register_setting('membership_settings_group_member_privilege', 'ms_gold_description_title');
@@ -749,29 +699,12 @@ function membership_tier_settings_init()
     register_setting('membership_settings_group_member_privilege', 'member-privileges-silver-color');
     register_setting('membership_settings_group_member_privilege', 'member-privileges-gold-color');
     register_setting('membership_settings_group_member_privilege', 'member-privileges-platinum-color');
+    register_setting('membership_settings_group_member_privilege', 'member-privileges-diamond-color');
 
     register_setting('membership_settings_group_member_privilege', 'member-privileges-silver-single-color');
     register_setting('membership_settings_group_member_privilege', 'member-privileges-gold-single-color');
     register_setting('membership_settings_group_member_privilege', 'member-privileges-platinum-single-color');
-
-    //Brand Privileges
-    register_setting('membership_settings_group_brands_privilege', 'brands_privilege_enable');
-    register_setting('membership_settings_group_brands_privilege', 'brands_privilege_list');
-
-    register_setting('membership_settings_group_brands_privilege', 'brands_privilege_step_01_start');
-    register_setting('membership_settings_group_brands_privilege', 'brands_privilege_step_01_end');
-    register_setting('membership_settings_group_brands_privilege', 'brands_privilege_step_01_discount_percent');
-
-    register_setting('membership_settings_group_brands_privilege', 'brands_privilege_step_02_start');
-    register_setting('membership_settings_group_brands_privilege', 'brands_privilege_step_02_end');
-    register_setting('membership_settings_group_brands_privilege', 'brands_privilege_step_02_discount_percent');
-
-    register_setting('membership_settings_group_brands_privilege', 'brands_privilege_step_03_start');
-    register_setting('membership_settings_group_brands_privilege', 'brands_privilege_step_03_end');
-    register_setting('membership_settings_group_brands_privilege', 'brands_privilege_step_03_discount_percent');
-
-    register_setting('membership_settings_group_brands_privilege', 'brands_privilege_step_04');
-    register_setting('membership_settings_group_brands_privilege', 'brands_privilege_step_04_discount_percent');
+    register_setting('membership_settings_group_member_privilege', 'member-privileges-diamond-single-color');
 }
 
 // ฟังก์ชันคำนวณและเพิ่มคะแนนเมื่อออเดอร์เสร็จสมบูรณ์
@@ -782,23 +715,19 @@ function add_points_after_purchase($order_id)
     global $wpdb;
 
     $order = wc_get_order($order_id);
-
-    // --- จุดที่ 1: กันคะแนนเบิ้ล ---
-    // เช็คว่าออเดอร์นี้เคยให้คะแนนไปหรือยัง
     if ($order->get_meta('_points_added_to_score') === 'yes') {
         return;
     }
 
-    // --- จุดที่ 2: หาตัวตนจาก Email (เผื่อซื้อแบบ Guest) ---
     $billing_email = $order->get_billing_email();
     $user = get_user_by('email', $billing_email);
 
     if (!$user)
-        return; // ถ้าไม่มี User ในระบบเลยจริงๆ ถึงค่อยข้าม
+        return;
 
     $user_id = $user->ID;
-    $order_total = $order->get_total(); // หรือใช้ $order->get_subtotal() ถ้าไม่รวมค่าส่ง
-    $points_earned = floor($order_total / get_option('membership_point_per_baht', 500));
+    
+    $points_earned = get_option('membership_point_per_order', 1);
 
     if ($points_earned > 0) {
         $table_name = $wpdb->prefix . 'users';
@@ -810,11 +739,10 @@ function add_points_after_purchase($order_id)
             $user_id
         ));
 
-        // --- จุดที่ 3: บันทึกไว้ว่าให้คะแนนแล้ว ---
         $order->update_meta_data('_points_added_to_score', 'yes');
         $order->save();
 
-        $order->add_order_note(sprintf('เพิ่มคะแนน %d ลงในคอลัมน์ score (User ID: %d)', $points_earned, $user_id));
+        $order->add_order_note(sprintf('เพิ่มคะแนน %d คะแนน สำหรับการเข้าพักครั้งนี้ (User ID: %d)', $points_earned, $user_id));
     }
 }
 
@@ -838,8 +766,9 @@ function display_customer_points()
     // กำหนดสีตามช่วงคะแนน
     $bar_color = '#CCC';
     if ($points > 0) $bar_color = esc_attr(get_option('member-privileges-silver-single-color')); // Silver
-    if ($points >= 10) $bar_color = esc_attr(get_option('member-privileges-gold-single-color')); // Gold
-    if ($points >= 20) $bar_color = esc_attr(get_option('member-privileges-platinum-single-color')); // Platinum
+    if ($points >= (int) get_option('ms_gold_score')) $bar_color = esc_attr(get_option('member-privileges-gold-single-color')); // Gold
+    if ($points >= (int) get_option('ms_platinum_score')) $bar_color = esc_attr(get_option('member-privileges-platinum-single-color')); // Platinum
+    if ($points >= (int) get_option('ms_diamonds_score')) $bar_color = esc_attr(get_option('member-privileges-diamonds-single-color')); // Diamonds
     ?>
     <style>
         .progress-fill {
@@ -856,114 +785,112 @@ function display_customer_points()
             font-weight: bold;
             color: <?php echo $bar_color;?>;
         }
+        #description-diamond {
+            background: <?php echo esc_attr(get_option('member-privileges-diamond-color')); ?>;
+        }
         #description-platinum {
             background: <?php echo esc_attr(get_option('member-privileges-platinum-color')); ?>;
-            background: linear-gradient(0deg,rgba(162, 22, 46, 1) 0%, rgba(162, 22, 46, 1) 50%, rgba(110, 27, 27, 1) 100%);
         }
         #description-gold {
             background: <?php echo esc_attr(get_option('member-privileges-gold-color')); ?>;
-            background: linear-gradient(0deg,rgba(193, 172, 81, 1) 0%, rgba(193, 172, 81, 1) 56%, rgba(158, 138, 40, 1) 100%);
         }
         #description-silver {
             background: <?php echo esc_attr(get_option('member-privileges-silver-color')); ?>;
-            background: linear-gradient(0deg,rgba(87, 86, 86, 1) 0%, rgba(140, 137, 137, 1) 56%, rgba(179, 179, 179, 1) 100%);
         }
     </style>
-    <div class="accordion" id="membership">
-        <div class="card">
-            <div class="card-header"><button class="btn btn-link" data-toggle="collapse" data-target="#membershipAccordion" aria-expanded="true" aria-controls="membershipAccordion">👑 คะแนนสะสมและระดับ Membership</button></h5></div>
-            <div id="membershipAccordion" class="collapse show" data-parent="#membership">
-                <div class="card-body">
-                    <div class="rewards-container">
-                        <div class="points-header">
-                            <div>
-                                <span style="display:block; color:#888; font-size:16px;">คะแนนสะสมและระดับ Membership</span>
-                                <span style="display:block; color:#888; font-size:14px;">(ซื้อครบ <?=number_format(get_option('membership_point_per_baht', 500))?> บาท = 1 คะแนน)</span>
-                                <span class="points-value" id="user_score"><?php echo number_format($points); ?></span> <small>คะแนน</small>
+    <div class="card">
+        <div class="card-body">
+            <div class="rewards-container">
+                <div class="points-header">
+                    <div>
+                        <span class="points-value" id="user_score"><?php echo number_format($points); ?></span> <small>Points <span style="color:#888;">(<?=number_format(get_option('membership_point_per_order', 1))?> Check-in = 1 Point)</span></small>
+                    </div>
+                    <div style="text-align: right; font-size: 14px; color: #aaa;"><?php
+                            if($points < get_option('ms_silver_score')) echo "Need " . (10 - $points) . " more points to reach Silver and receive a discount of 2% for your next stay";
+                            elseif($points < get_option('ms_gold_score')) echo "Need " . (20 - $points) . " more points to reach Gold and receive a discount of 4% for your next stay";
+                            elseif($points < get_option('ms_platinum_score')) echo "Need " . (30 - $points) . " more points to reach Platinum and receive a discount of 8% for your next stay";
+                            elseif($points < get_option('ms_diamond_score')) echo "Need " . (40 - $points) . " more points to reach Diamond and receive a discount of 10% for your next stay";
+                            else echo "You are already at the Diamond level!";
+                    ?></div></div>
+                <div class="progress-track">
+                    <div class="progress-fill" style="width: <?php echo $percentage; ?>%;"></div>
+                    <div class="milestones">
+                        <div class="dot active"><span class="dot-label">0</span></div>
+                        <div class="dot <?php echo ($points >= get_option('ms_silver_score')) ? 'active' : ''; ?>" style="left: 25%; position: absolute;"><span class="dot-label"><?=get_option('ms_silver_score')?></span></div>
+                        <div class="dot <?php echo ($points >= get_option('ms_gold_score')) ? 'active' : ''; ?>" style="left: 50%; position: absolute;"><span class="dot-label"><?=get_option('ms_gold_score')?></span></div>
+                        <div class="dot <?php echo ($points >= get_option('ms_platinum_score')) ? 'active' : ''; ?>" style="left: 75%; position: absolute;"><span class="dot-label"><?=get_option('ms_platinum_score')?></span></div>
+                        <div class="dot <?php echo ($points >= get_option('ms_diamond_score')) ? 'active' : ''; ?>" style="left: 100%; position: absolute;"><span class="dot-label"><?=get_option('ms_diamond_score')?></span></div>
+                    </div>
+                </div>
+                <div style="width: 100%; overflow: auto; scrollbar-width: none; -ms-overflow-style: none;">
+                    <div class="membership-description" <?php if($points >= get_option('ms_diamond_score')) { echo 'style="flex-direction: row-reverse;"'; } ?>>
+                        <div class="card <?php if($points >= get_option('ms_silver_score', 10) && $points < get_option('ms_gold_score', 20)) { echo 'active'; } ?>" id="description-silver" style="left: 0%;">
+                            <div class="card_header">
+                                <span class="card_logo"><?=get_option('ms_card_title');?></span>
+                                <h2 id="silver"><?=get_option('ms_silver_description_title');?></h2>
                             </div>
-                            <div style="text-align: right; font-size: 14px; color: #aaa;"><?php
-                                    if($points < get_option('ms_silver_score', 10)) echo "อีก " . (10 - $points) . " คะแนนเพื่อเป็นระดับ Silver และรับส่วนลด 1% เมื่อซื้อสินค้าผ่านเว็บไซต์";
-                                    elseif($points < get_option('ms_gold_score', 20)) echo "อีก " . (20 - $points) . " คะแนนเพื่อเป็นระดับ Gold และรับส่วนลด 2% เมื่อซื้อสินค้าผ่านเว็บไซต์";
-                                    elseif($points < get_option('ms_platinum_score', 30)) echo "อีก " . (30 - $points) . " คะแนนเพื่อเป็นระดับ Platinum และรับส่วนลด 3% เมื่อซื้อสินค้าผ่านเว็บไซต์";
-                                    else echo "คุณอยู่ในระดับ Platinum เรียบร้อยแล้ว!";
-                            ?></div></div>
-                        <div class="progress-track">
-                            <div class="progress-fill" style="width: <?php echo $percentage; ?>%;"></div>
-                            <div class="milestones">
-                                <div class="dot active"><span class="dot-label">0</span></div>
-                                <div class="dot <?php echo ($points >= get_option('ms_silver_score', 10)) ? 'active' : ''; ?>" style="left: 33.33%; position: absolute;"><span class="dot-label"><?=get_option('ms_silver_score', 30)?></span></div>
-                                <div class="dot <?php echo ($points >= get_option('ms_gold_score', 20)) ? 'active' : ''; ?>" style="left: 66.66%; position: absolute;"><span class="dot-label"><?=get_option('ms_gold_score', 30)?></span></div>
-                                <div class="dot <?php echo ($points >= get_option('ms_platinum_score', 30)) ? 'active' : ''; ?>" style="right: 0; position: absolute;"><span class="dot-label"><?=get_option('ms_platinum_score', 30)?>+</span></div>
-                            </div>
-                        </div>
-                        <div class="membership-description">
-                            <div class="card <?php if($points >= get_option('ms_silver_score', 10) && $points < get_option('ms_gold_score', 20)) { echo 'active'; } ?>" id="description-silver" style="left: 0%;">
-                                <div class="card_header">
-                                    <span class="card_logo"><?=get_option('ms_card_title');?></span>
-                                    <h2 id="silver"><?=get_option('ms_silver_description_title');?></h2>
-                                </div>
-                                <span class="display_name"><?=wp_get_current_user()->display_name?></span><span class="card_number">1155 1854 7745</span>
-                                <?=get_option('ms_silver_description_content');?>
-                                <div class="card_points">
-                                    <span class="points"><?=get_option('ms_silver_score', 10)?></span><span class="text">Points</span>
-                                </div>
-                            </div>
-                            <div class="card <?php if($points >= get_option('ms_gold_score', 20) && $points < get_option('ms_platinum_score', 30)) { echo 'active'; } ?>" id="description-gold" style="left: 0%;">
-                                <div class="card_header">
-                                    <span class="card_logo"><?=get_option('ms_card_title');?></span>
-                                    <h2 id="gold"><?=get_option('ms_gold_description_title');?></h2>
-                                </div>
-                                <span class="display_name"><?=wp_get_current_user()->display_name?></span><span class="card_number">1155 1854 7745</span>
-                                <?=get_option('ms_gold_description_content');?>
-                                <div class="card_points">
-                                    <span class="points"><?=get_option('ms_gold_score', 20)?></span><span class="text">Points</span>
-                                </div>
-                            </div>
-                            <div class="card <?php if($points >= get_option('ms_platinum_score', 30)) { echo 'active'; } ?>" id="description-platinum" style="left: 0%;">
-                                <div class="card_header">
-                                    <span class="card_logo"><?=get_option('ms_card_title');?></span>
-                                    <h2 id="platinum"><?=get_option('ms_platinum_description_title');?></h2>
-                                </div>
-                                <span class="display_name"><?=wp_get_current_user()->display_name?></span><span class="card_number">1155 1854 7745</span>
-                                <?=get_option('ms_platinum_description_content');?>
-                                <div class="card_points">
-                                    <span class="points"><?=get_option('ms_platinum_score', 30)?></span><span class="text">Points</span>
-                                </div>
+                            <span class="display_name"><?=wp_get_current_user()->display_name?></span><span class="card_number">1155 1854 7745</span>
+                            <?=get_option('ms_silver_description_content');?>
+                            <div class="card_points">
+                                <span class="points"><?=get_option('ms_silver_score', 10)?></span><span class="text">Points</span>
                             </div>
                         </div>
-                        <div class="row privilege_card_group" style="gap: 10px;">
-                            <?php
-                            if(get_option('membership_enable_member_privileges', 'no') === "yes") {
-                            ?>
-                            <div class="col-lg-3 col-12 privilege_card cursor-pointer" onclick="window.location.href='/product-category/member-privileges/'">
-                                <h2>🎉 ซื้อสินค้าในราคาพิเศษ</h2>
-                                <p>ซื้อสินค้าที่ร่วมรายการในราคาพิเศษ สำหรับสมาชิก</p>
+                        <div class="card <?php if($points >= get_option('ms_gold_score', 20) && $points < get_option('ms_platinum_score', 30)) { echo 'active'; } ?>" id="description-gold" style="left: 0%;">
+                            <div class="card_header">
+                                <span class="card_logo"><?=get_option('ms_card_title');?></span>
+                                <h2 id="gold"><?=get_option('ms_gold_description_title');?></h2>
                             </div>
-                            <?php
-                            }
-                            ?>
-                            <?php
-                            if(get_option('brands_privilege_enable', 'no') == 'yes') {
-                            ?>
-                            <div class="col-lg-3 col-12 privilege_card">
-                                <h2>🏆 Brands Privilege</h2>
-                                <p>ซื้อสินค้าจากแบรนด์ที่ร่วมรายการในราคาพิเศษ</p>
+                            <span class="display_name"><?=wp_get_current_user()->display_name?></span><span class="card_number">1155 1854 7745</span>
+                            <?=get_option('ms_gold_description_content');?>
+                            <div class="card_points">
+                                <span class="points"><?=get_option('ms_gold_score', 20)?></span><span class="text">Points</span>
                             </div>
-                            <?php
-                            }
-                            ?>
-                            <?php
-                            if(get_option('membership_enable_redeem', 'no') == 'yes') {
-                            ?>
-                            <div class="col-lg-3 col-12 privilege_card">
-                                <h2>✨ แลกคะแนนเป็นส่วนลด</h2>
-                                <p>แลกคะแนนจากการซื้อสินค้าเป็นส่วนลดสำหรับการซื้อครั้งหน้า</p>
+                        </div>
+                        <div class="card <?php if($points >= get_option('ms_platinum_score', 30)) { echo 'active'; } ?>" id="description-platinum" style="left: 0%;">
+                            <div class="card_header">
+                                <span class="card_logo"><?=get_option('ms_card_title');?></span>
+                                <h2 id="platinum"><?=get_option('ms_platinum_description_title');?></h2>
                             </div>
-                            <?php
-                            }
-                            ?>
+                            <span class="display_name"><?=wp_get_current_user()->display_name?></span><span class="card_number">1155 1854 7745</span>
+                            <?=get_option('ms_platinum_description_content');?>
+                            <div class="card_points">
+                                <span class="points"><?=get_option('ms_platinum_score', 30)?></span><span class="text">Points</span>
+                            </div>
+                        </div>
+                        <div class="card <?php if($points >= get_option('ms_diamond_score', 40)) { echo 'active'; } ?>" id="description-diamond" style="left: 0%;">
+                            <div class="card_header">
+                                <span class="card_logo"><?=get_option('ms_card_title');?></span>
+                                <h2 id="diamond"><?=get_option('ms_diamond_description_title');?></h2>
+                            </div>
+                            <span class="display_name"><?=wp_get_current_user()->display_name?></span><span class="card_number">1155 1854 7745</span>
+                            <?=get_option('ms_diamond_description_content');?>
+                            <div class="card_points">
+                                <span class="points"><?=get_option('ms_diamond_score', 40)?></span><span class="text">Points</span>
+                            </div>
                         </div>
                     </div>
+                </div>
+                <div class="row privilege_card_group" style="gap: 10px;">
+                    <?php
+                    if(get_option('membership_enable_member_privileges', 'no') === "yes") {
+                    ?>
+                    <div class="col-lg-3 col-12 privilege_card cursor-pointer" onclick="window.location.href='/product-category/member-privileges/'">
+                        <h2>🎉 Special Discount</h2>
+                        <p>Stay at special rates for members.</p>
+                    </div>
+                    <?php
+                    }
+                    ?>
+                    <?php
+                    if(get_option('membership_enable_redeem', 'no') == 'yes') {
+                    ?>
+                    <div class="col-lg-3 col-12 privilege_card">
+                        <h2>✨ Redeem Points</h2>
+                        <p>Redeem points from your stay for a discount on your next stay.</p>
+                    </div>
+                    <?php
+                    }
+                    ?>
                 </div>
             </div>
         </div>
@@ -988,25 +915,19 @@ function apply_tier_discount_based_on_score($cart)
 
     global $wpdb;
 
-    $chosen_methods = WC()->session->get('chosen_shipping_methods');
-    
-    if(get_option('no_discount_self_pickup', "yes") == "yes") {
-        if (isset($chosen_methods[0]) && strpos($chosen_methods[0], '_selfpickup') !== false) {
-            return;
-        }
-    }
-
     // ดึงคะแนนจากคอลัมน์ score ในตาราง wpln_users
     $score = (int) $wpdb->get_var($wpdb->prepare(
         "SELECT score FROM {$wpdb->prefix}users WHERE ID = %d",
         $user_id
     ));
 
-    // กำหนดเงื่อนไขส่วนลด (Logic: 10 แต้ม = 1%, 20 แต้ม = 2%, 30 แต้ม = 3%)
     $discount_percentage = 0;
 
+    $d_score = get_option('ms_diamond_score', 50);
+    $d_discount = get_option('ms_diamond_discount', 5) / 100;
+
     $p_score = get_option('ms_platinum_score', 30);
-    $p_discount = get_option('ms_platinum_discount', 3) / 100; // หาร 100 เพราะเก็บเป็นเลขจำนวนเต็ม
+    $p_discount = get_option('ms_platinum_discount', 3) / 100;
 
     $g_score = get_option('ms_gold_score', 20);
     $g_discount = get_option('ms_gold_discount', 2) / 100;
@@ -1015,7 +936,10 @@ function apply_tier_discount_based_on_score($cart)
     $s_discount = get_option('ms_silver_discount', 1) / 100;
 
     // Logic การเช็คระดับ
-    if ($score >= $p_score) {
+    if ($score >= $d_score) {
+        $discount_percentage = $d_discount;
+        $level_name = "Diamond Membership (" . (get_option('ms_diamond_discount', 5)) . "%)";
+    } elseif ($score >= $p_score) {
         $discount_percentage = $p_discount;
         $level_name = "Platinum Membership (" . (get_option('ms_platinum_discount', 3)) . "%)";
     } elseif ($score >= $g_score) {
@@ -1060,44 +984,38 @@ function redeem_form_in_my_account()
     ?>
     <div class="accordion" id="redeem">
         <div class="card">
-            <div class="card-header"><button class="btn btn-link" data-toggle="collapse" data-target="#redeemAccordion" aria-expanded="true" aria-controls="redeemAccordion">🎁 แลกคะแนนเป็นส่วนลด</button>
-            </div>
             <div id="redeemAccordion" class="collapse show" data-parent="#redeem">
                 <div class="card-body">
                     <div class="redeem-container" style="background:#fff; padding:25px; margin-bottom:30px;">
-                        <p style="color:#666; font-size:14px;">คะแนนปัจจุบัน: <strong id="current-user-score"
-                                style="color:#27ae60; font-size:18px;"><?php echo number_format($score); ?></strong> คะแนน (1 คะแนน = <?=number_format(get_option('membership_baht_per_point', 1));?> บาท)
+                        <p style="color:#666; font-size:14px;">Current Score: <strong id="current-user-score"
+                                style="color:#27ae60; font-size:18px;"><?php echo number_format($score); ?></strong> Points (1 Point = <?=number_format(get_option('membership_baht_per_point', 1));?> THB)
                         </p>
-
                         <div style="display:flex; gap:10px; margin-top:15px;">
-                            <input type="number" id="redeem-amount" placeholder="ระบุจำนวนคะแนนที่ต้องการแลก" min="1" max="<?php echo $score; ?>"
+                            <input type="number" id="redeem-amount" placeholder="Points to redeem" min="1" max="<?php echo $score; ?>"
                                 style="flex-grow:1; padding:10px; border:1px solid #ddd; border-radius:4px;">
-                            <button id="redeem-btn" class="button button-primary">แลกโค้ดส่วนลด</button>
+                            <button id="redeem-btn" class="button button-primary">Redeem Your Discount</button>
                         </div>
                         <div id="redeem-result" style="margin-top:15px; display:none;"></div>
-
                         <?php
                         $history = $wpdb->get_results( $wpdb->prepare(
                             "SELECT * FROM {$wpdb->prefix}redeem_history WHERE user_id = %d ORDER BY created_at DESC",
                             $user_id
                         ) );
-
                         if ( $history ) { ?>
                         <div style="overflow: auto;">
                             <table style="width: 100%; border-collapse: collapse; margin-top:15px; white-space: nowrap;">
                                 <thead>
                                     <tr style="background:#f8f8f8;">
-                                        <th style="padding:10px; border-bottom:1px solid #ddd;">วันที่</th>
-                                        <th style="padding:10px; border-bottom:1px solid #ddd;">โค้ด</th>
-                                        <th style="padding:10px; border-bottom:1px solid #ddd;">คะแนนที่ใช้</th>
-                                        <th style="padding:10px; border-bottom:1px solid #ddd;">สถานะ</th>
+                                        <th style="padding:10px; border-bottom:1px solid #ddd;">Date</th>
+                                        <th style="padding:10px; border-bottom:1px solid #ddd;">Code</th>
+                                        <th style="padding:10px; border-bottom:1px solid #ddd;">Points Used</th>
+                                        <th style="padding:10px; border-bottom:1px solid #ddd;">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php foreach ($history as $row) : 
-                                        // เช็คสถานะจริงจาก WooCommerce อีกทีเพื่อความชัวร์
                                         $c = new WC_Coupon($row->coupon_code);
-                                        $display_status = ($c->get_usage_count() > 0) ? 'ใช้แล้ว' : 'ยังไม่ได้ใช้';
+                                        $display_status = ($c->get_usage_count() > 0) ? 'Used' : 'Not Used';
                                         $status_color = ($c->get_usage_count() > 0) ? '#999' : '#27ae60';
                                     ?>
                                         <tr>
@@ -1141,8 +1059,8 @@ function redeem_form_in_my_account()
                     if (res.success) {
                         var htmlResult =
                             `<div style="background:#e7fbd3; padding:15px; border-radius:4px; border:1px solid #2ecc71; color:#155724;">
-                        สำเร็จ! โค้ดส่วนลดของคุณคือ: <strong style="font-size:18px;">${res.data.coupon}</strong>
-                        <br>(ลด ${res.data.amount} บาท)
+                        Redeem success! Your discount code is: <strong style="font-size:18px;">${res.data.coupon}</strong>
+                        <br>(Save ${res.data.amount} THB)
                     </div>`;
                         $('#redeem-result').html(htmlResult).fadeIn();
                         $('#current-user-score').text(res.data.new_score);
@@ -1150,14 +1068,14 @@ function redeem_form_in_my_account()
                         $('#user_score_header').text(res.data.new_score);
                         $('#redeem-amount').val('').attr('max', res.data.new_score_raw);
                     } else {
-                        alert(res.data || 'เกิดข้อผิดพลาดในการแลกคะแนน');
+                        alert(res.data || 'An error occurred while redeeming points');
                     }
                 },
                 error: function () {
-                    alert('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
+                    alert('Failed to connect to the server');
                 },
                 complete: function () {
-                    btn.text('แลกโค้ดส่วนลด').prop('disabled', false);
+                    btn.text('Redeem Your Discount').prop('disabled', false);
                 }
             });
         });
@@ -1522,70 +1440,12 @@ function user_score_shortcode() {
     $output = '<div class="membership-score">';
     $output .= '    <span class="icon">⭐</span>';
     $output .= '    <span class="score-num" id="user_score_header">' . $display_score . '</span>';
-    $output .= '    <span class="label">คะแนน</span>';
+    $output .= '    <span class="label">Points</span>';
     $output .= '</div>';
 
     return $output;
 }
 add_shortcode('user_score', 'user_score_shortcode');
-
-add_action('woocommerce_cart_calculate_fees', 'apply_tiered_brand_discount', 20);
-function apply_tiered_brand_discount($cart) {
-    if (is_admin() && !defined('DOING_AJAX')) return;
-
-    if(get_option('brands_privilege_enable', 'no') == 'no') return;
-
-    // --- 1. ตั้งค่าแบรนด์ (Slug ของ product_brand) และเงื่อนไข ---
-    $target_brands = array(explode("\n", get_option('brands_privilege_list'))); //'CHASING', 'Dolphin'
-    $eligible_amount = 0;
-
-    // --- 2. คำนวณยอดรวมเฉพาะสินค้าในแบรนด์ที่กำหนด ---
-    foreach ($cart->get_cart() as $cart_item) {
-        $product_id = $cart_item['product_id'];
-        
-        // เช็คว่าสินค้ามี Taxonomy 'product_brand' ตรงกับที่เรากำหนดไหม
-        // ใช้ has_term( 'slug', 'taxonomy_name', 'product_id' )
-        $is_target_brand = false;
-        foreach ($target_brands as $brand_slug) {
-            if (has_term($brand_slug, 'product_brand', $product_id)) {
-                $is_target_brand = true;
-                break;
-            }
-        }
-
-        if ($is_target_brand) {
-            // line_total คือราคาสินค้า x จำนวน หลังหักส่วนลดคูปองระดับสินค้าแล้ว
-            $eligible_amount += $cart_item['line_total'];
-        }
-    }
-
-    if ($eligible_amount <= 0) return;
-
-    // --- 3. เช็ค Tier ส่วนลดตามยอดสะสมของแบรนด์ ---
-    $discount_percent = 0;
-    if ($eligible_amount >= (int) get_option('brands_privilege_step_01_start', 30000) && $eligible_amount <= (int) get_option('brands_privilege_step_01_end', 50000)) {
-        $discount_percent = (int) get_option('brands_privilege_step_01_discount_percent', 2);
-    } elseif ($eligible_amount >= (int) get_option('brands_privilege_step_02_start', 50001) && $eligible_amount <= (int) get_option('brands_privilege_step_02_end', 70000)) {
-        $discount_percent = (int) get_option('brands_privilege_step_02_discount_percent', 3);
-    } elseif ($eligible_amount >= (int) get_option('brands_privilege_step_03_start', 70001) && $eligible_amount <= (int) get_option('brands_privilege_step_03_end', 100000)) {
-        $discount_percent = (int) get_option('brands_privilege_step_03_discount_percent', 4);
-    } elseif ($eligible_amount > (int) get_option('brands_privilege_step_04', 100000)) {
-        $discount_percent = (int) get_option('brands_privilege_step_04_discount_percent', 5);
-    }
-
-    // --- 4. สั่งลดราคา ---
-    if ($discount_percent > 0) {
-        $discount_total = ($eligible_amount * $discount_percent) / 100;
-        
-        // เพิ่มบรรทัดส่วนลดเข้าไป (ยอดติดลบ)
-        // ใส่ชื่อแบรนด์รวมๆ หรือระบุว่า Discount ก็ได้ครับ
-        $cart->add_fee(
-            "ส่วนลดพิเศษ: Brand Privilege ($discount_percent%)", 
-            -$discount_total, 
-            false
-        );
-    }
-}
 
 add_action('woocommerce_cart_totals_after_order_total', 'display_combined_addon_and_tiered_discount');
 add_action('woocommerce_review_order_after_order_total', 'display_combined_addon_and_tiered_discount');
@@ -1615,7 +1475,7 @@ function display_combined_addon_and_tiered_discount() {
         ?>
         <div class="totals-discounts">
             <div class="title">
-                <span>ประหยัดไปได้ทั้งหมด:</span> 
+                <span>Saved:</span> 
                 <span class="totals" style="color: red;"><?php echo wc_price($total_discount); ?></span>
             </div>
         </div>
