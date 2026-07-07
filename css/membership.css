@@ -30,7 +30,7 @@
 
 .rewards-container {
     font-family: 'Kanit';
-    padding: 0 20px;
+    padding: 20px;
     background: #fff;
 
     .points-header {
@@ -52,7 +52,7 @@
     .milestones {
         position: absolute;
         top: 0;
-        width: 100%;
+        width: 99%;
         height: 100%;
         display: flex;
         justify-content: space-between;

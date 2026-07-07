@@ -757,18 +757,15 @@ function display_customer_points()
         "SELECT score FROM {$wpdb->prefix}users WHERE ID = %d",
         $user_id
     ));
-
-    // คำนวณความกว้างของ Progress Bar (สมมติเป้าหมายสูงสุดที่ 30 คะแนน)
-    $max_points = 30;
+    $max_points = 400;
     $percentage = ($points / $max_points) * 100;
     if ($percentage > 100) $percentage = 100;
-
     // กำหนดสีตามช่วงคะแนน
     $bar_color = '#CCC';
     if ($points > 0) $bar_color = esc_attr(get_option('member-privileges-silver-single-color')); // Silver
     if ($points >= (int) get_option('ms_gold_score')) $bar_color = esc_attr(get_option('member-privileges-gold-single-color')); // Gold
     if ($points >= (int) get_option('ms_platinum_score')) $bar_color = esc_attr(get_option('member-privileges-platinum-single-color')); // Platinum
-    if ($points >= (int) get_option('ms_diamonds_score')) $bar_color = esc_attr(get_option('member-privileges-diamonds-single-color')); // Diamonds
+    if ($points >= (int) get_option('ms_diamond_score')) $bar_color = esc_attr(get_option('member-privileges-diamond-single-color')); // Diamonds
     ?>
     <style>
         .progress-fill {
@@ -806,14 +803,14 @@ function display_customer_points()
                         <span class="points-value" id="user_score"><?php echo number_format($points); ?></span> <small>Points <span style="color:#888;">(<?=number_format(get_option('membership_point_per_order', 1))?> Check-in = 1 Point)</span></small>
                     </div>
                     <div style="text-align: right; font-size: 14px; color: #aaa;"><?php
-                            if($points < get_option('ms_silver_score')) echo "Need " . (10 - $points) . " more points to reach Silver and receive a discount of 2% for your next stay";
-                            elseif($points < get_option('ms_gold_score')) echo "Need " . (20 - $points) . " more points to reach Gold and receive a discount of 4% for your next stay";
-                            elseif($points < get_option('ms_platinum_score')) echo "Need " . (30 - $points) . " more points to reach Platinum and receive a discount of 8% for your next stay";
-                            elseif($points < get_option('ms_diamond_score')) echo "Need " . (40 - $points) . " more points to reach Diamond and receive a discount of 10% for your next stay";
+                            if($points < get_option('ms_silver_score')) echo "Need " . ((int) get_option('ms_silver_score') - $points) . " more points to reach Silver and receive a discount of 2% for your next stay";
+                            elseif($points < get_option('ms_gold_score')) echo "Need " . ((int) get_option('ms_gold_score') - $points) . " more points to reach Gold and receive a discount of 4% for your next stay";
+                            elseif($points < get_option('ms_platinum_score')) echo "Need " . ((int) get_option('ms_platinum_score') - $points) . " more points to reach Platinum and receive a discount of 8% for your next stay";
+                            elseif($points < get_option('ms_diamond_score')) echo "Need " . ((int) get_option('ms_diamond_score') - $points) . " more points to reach Diamond and receive a discount of 10% for your next stay";
                             else echo "You are already at the Diamond level!";
                     ?></div></div>
                 <div class="progress-track">
-                    <div class="progress-fill" style="width: <?php echo $percentage; ?>%;"></div>
+                    <div class="progress-fill" style="width: <?= round($percentage); ?>%;"></div>
                     <div class="milestones">
                         <div class="dot active"><span class="dot-label">0</span></div>
                         <div class="dot <?php echo ($points >= get_option('ms_silver_score')) ? 'active' : ''; ?>" style="left: 25%; position: absolute;"><span class="dot-label"><?=get_option('ms_silver_score')?></span></div>
@@ -959,7 +956,7 @@ function apply_tier_discount_based_on_score($cart)
         $discount_amount = $cart->get_subtotal() * $discount_percentage;
 
         // บรรทัดนี้จะเพิ่มรายการส่วนลดเข้าไปในหน้า Checkout (ค่าติดลบเพื่อให้เป็นส่วนลด)
-        $cart->add_fee(__('ส่วนลดพิเศษ: ' . $level_name, 'woocommerce'), -$discount_amount);
+        $cart->add_fee(__('Membership Discount: ' . $level_name, 'woocommerce'), -$discount_amount);
     }
 }
 
@@ -1503,6 +1500,9 @@ function add_level_color_to_user_icon() {
     .platinum.level_color {
         color: <?=get_option('member-privileges-platinum-single-color')?>;
     }
+    .diamond.level_color {
+        color: <?=get_option('member-privileges-diamond-single-color')?>;
+    }
     .silver.level_color:hover {
         color: <?=get_option('member-privileges-silver-single-color')?> !important;
     }
@@ -1511,6 +1511,9 @@ function add_level_color_to_user_icon() {
     }
     .platinum.level_color:hover {
         color: <?=get_option('member-privileges-platinum-single-color')?> !important;
+    }
+    .diamond.level_color:hover {
+        color: <?=get_option('member-privileges-diamond-single-color')?> !important;
     }
     .user-level-badge {
         width: 65px;
