@@ -1540,6 +1540,9 @@ function add_level_color_to_user_icon() {
     .platinum.user-level-badge {
         background: <?=get_option('member-privileges-platinum-color')?>;
     }
+    .diamond.user-level-badge {
+        background: <?=get_option('member-privileges-diamond-color')?>;
+    }
 </style>
 <script type="text/javascript">
     (function($){
