@@ -730,7 +730,7 @@ function add_points_after_purchase($order_id)
 
     $user_id = $user->ID;
     
-    $points_earned = get_option('membership_point_per_order', 1);
+    $points_earned = $order->get_item_count() * get_option('membership_point_per_order', 1);
 
     if ($points_earned > 0) {
         $table_name = $wpdb->prefix . 'users';
