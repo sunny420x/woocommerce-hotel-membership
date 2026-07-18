@@ -150,7 +150,7 @@ function woocommerce_membership_setting_page()
         }
     </style>
     <div class="white-label-zone no-print">
-        <span style="padding: 60px 10px 60px 40px;float: left;font-size: 60px;">👑</span>
+        <span style="padding: 40px 10px 40px 40px;float: left;font-size: 60px;">👑</span>
         <div style="padding: 20px 0;">
             <h1>Hotel Membership</h1>
             <p>ระบบสิทธิพิเศษ Hotel Membership สำหรับ WooCommerce บน WordPress ประกอบไปด้วย คะแนนและระดับของสมาชิก แลกคะแนนเป็นส่วนลด ส่วนลดสำหรับห้องพิเศษ
@@ -209,7 +209,7 @@ function woocommerce_membership_setting_page()
                     <table class="wp-list-table widefat fixed striped">
                         <tr>
                             <td>ลูกค้าจะได้รับ 1 คะแนนต่อการเข้าพัก</td>
-                            <td><input type="text" name="membership_point_per_order" value="<?=get_option('membership_point_per_order', 1);?>"> ครั้ง</td>
+                            <td><input type="text" name="membership_point_per_order" value="<?=get_option('membership_point_per_order', 1);?>"> ห้อง</td>
                         </tr>
                         <tr>
                             <td>เข้าพักครั้งแรกลดทุกห้องพัก</td>
@@ -334,12 +334,12 @@ function woocommerce_membership_setting_page()
                 <?php
                 settings_fields('membership_settings_group_special_offers');
                 ?>
-                <h1>⭐ ส่วนลดสำหรับสินค้าพิเศษ</h1>
+                <h1>⭐ ส่วนลดสำหรับห้องพิเศษ</h1>
                 <br>
                 <div style="padding: 0 25px 25px 25px;">
                     <table class="wp-list-table widefat fixed striped">
                         <tr>
-                            <td>ระบบส่วนลดสำหรับสินค้าพิเศษ</td>
+                            <td>ระบบส่วนลดสำหรับห้องพิเศษ</td>
                             <td>
                                 <select name="membership_enable_member_privileges" id="">
                                     <option value="yes" <?php selected( get_option('membership_enable_member_privileges'), 'yes' ); ?>>เปิดใช้งาน</option>
@@ -348,7 +348,7 @@ function woocommerce_membership_setting_page()
                             </td>
                         </tr>
                         <tr>
-                            <td>Slug ของประเภทสินค้า:</td>
+                            <td>Slug ของประเภทห้อง:</td>
                             <td>
                                 <input type="text" name="member-privileges-slug" value="<?=get_option('member-privileges-slug', 'member-privileges');?>">
                             </td>
@@ -639,7 +639,7 @@ function woocommerce_membership_setting_page()
                 <h1>WooCommerce Hotel Membership Plugin</h1>
                 <div style="padding: 0 25px 25px 25px;">
                     <h2>ระบบนี้คืออะไร ?</h2>
-                    <p>ระบบ WooCommerce Hotel Membership คือระบบที่ออกแบบมาเพื่อรองรับการทำการตลาดบนเว็บไซต์ โดยลูกค้าสามารถสะสมคะแนนจากการซื้อสินค้าภายในเว็บไซต์ 
+                    <p>ระบบ WooCommerce Hotel Membership คือระบบที่ออกแบบมาเพื่อรองรับการทำการตลาดบนเว็บไซต์ โดยลูกค้าสามารถสะสมคะแนนจากการเช่าห้องพักภายในเว็บไซต์ 
                         ลูกค้าสามารถรับส่วนลดทุกห้องพักตามระดับสมาชิกที่ถูกกำหนดตามเกณฑ์การคิดระดับสมาชิก ลูกค้าจะได้รับส่วนลดสำหรับห้องพิเศษที่กำหนดไว้โดยคิดตามเกณฑ์ราคา 
                         ลูกค้าสามารถแลกคะแนนเป็นส่วนลด
                     </p>
@@ -955,7 +955,6 @@ function apply_tier_discount_based_on_score($cart)
 
     // ถ้ามีส่วนลด ให้คำนวณยอดแล้วหักออก
     if ($discount_percentage > 0) {
-        // คำนวณจากราคาสินค้ารวมในตะกร้า (ไม่รวมภาษี/ค่าส่ง หรือจะใช้ get_subtotal ก็ได้)
         $discount_amount = $cart->get_subtotal() * $discount_percentage;
 
         // บรรทัดนี้จะเพิ่มรายการส่วนลดเข้าไปในหน้า Checkout (ค่าติดลบเพื่อให้เป็นส่วนลด)
@@ -1471,16 +1470,16 @@ function display_combined_addon_and_tiered_discount() {
     }
 
     // --- 3. แสดงผลรวมทั้งหมดที่ประหยัดไปได้ ---
-    if ($total_discount > 0) {
+    //if ($total_discount > 0) {
         ?>
-        <div class="totals-discounts">
+        <!-- <div class="totals-discounts">
             <div class="title">
                 <span>Saved:</span> 
                 <span class="totals" style="color: red;"><?php echo wc_price($total_discount); ?></span>
             </div>
-        </div>
+        </div> -->
         <?php
-    }
+    //}
 }
 
 add_action('wp_footer', 'add_level_color_to_user_icon');
