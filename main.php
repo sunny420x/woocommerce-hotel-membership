@@ -208,8 +208,8 @@ function woocommerce_membership_setting_page()
                 <div style="padding: 25px 25px 25px 25px;">
                     <table class="wp-list-table widefat fixed striped">
                         <tr>
-                            <td>ลูกค้าจะได้รับ 1 คะแนนต่อการเข้าพัก</td>
-                            <td><input type="text" name="membership_point_per_order" value="<?=get_option('membership_point_per_order', 1);?>"> ห้อง</td>
+                            <td>ลูกค้าจะได้รับกี่คะแนน ต่อการเข้าพัก 1 ครั้ง</td>
+                            <td><input type="text" name="membership_point_per_order" value="<?=get_option('membership_point_per_order', 1);?>"> คะแนน</td>
                         </tr>
                         <tr>
                             <td>เข้าพักครั้งแรกลดทุกห้องพัก</td>
@@ -760,10 +760,20 @@ function display_customer_points()
         "SELECT score FROM {$wpdb->prefix}users WHERE ID = %d",
         $user_id
     ));
-    $max_points = 400;
-    $percentage = ($points / $max_points) * 100;
-    if ($percentage > 100) $percentage = 100;
-    // กำหนดสีตามช่วงคะแนน
+
+    $x1 = 0;
+    $x2 = (int) get_option('ms_silver_score');
+    $x3 = (int) get_option('ms_gold_score');
+
+    $y1 = 0;
+    $y2 = 25;
+    $y3 = 50;
+
+    $m1 = ($y2 - $y1) / ($x2 - $x1);
+    $m2 = ($y3 - $y2) / ($x3 - $x2);
+
+    $percentage = $y1 + $m1 * ($points - $x1) + (($m2 - $m1) / 2) * (($points - $x2) + abs($points - $x2));
+
     $bar_color = '#CCC';
     if ($points > 0) $bar_color = esc_attr(get_option('member-privileges-silver-single-color')); // Silver
     if ($points >= (int) get_option('ms_gold_score')) $bar_color = esc_attr(get_option('member-privileges-gold-single-color')); // Gold
@@ -803,7 +813,7 @@ function display_customer_points()
             <div class="rewards-container">
                 <div class="points-header">
                     <div>
-                        <span class="points-value" id="user_score"><?php echo number_format($points); ?></span> <small>Points <span style="color:#888;">(<?=number_format(get_option('membership_point_per_order', 1))?> Check-in = 1 Point)</span></small>
+                        <span class="points-value" id="user_score"><?php echo number_format($points); ?></span> <small>Points <span style="color:#888;">(<?=number_format(get_option('membership_point_per_order', 1))?> Point per room)</span></small>
                     </div>
                     <div style="text-align: right; font-size: 14px; color: #aaa;"><?php
                             if($points < get_option('ms_silver_score')) echo "Need " . ((int) get_option('ms_silver_score') - $points) . " more points to reach Silver and receive a discount of 2% for your next stay";
@@ -824,7 +834,7 @@ function display_customer_points()
                 </div>
                 <div style="width: 100%; overflow: auto; scrollbar-width: none; -ms-overflow-style: none;">
                     <div class="membership-description" <?php if($points >= get_option('ms_diamond_score')) { echo 'style="flex-direction: row-reverse;"'; } ?>>
-                        <div class="card <?php if($points >= get_option('ms_silver_score', 10) && $points < get_option('ms_gold_score', 20)) { echo 'active'; } ?>" id="description-silver" style="left: 0%;">
+                        <div class="card <?php if($points >= get_option('ms_silver_score') && $points < get_option('ms_gold_score')) { echo 'active'; } ?>" id="description-silver" style="left: 0%;">
                             <div class="card_header">
                                 <span class="card_logo"><?=get_option('ms_card_title');?></span>
                                 <h2 id="silver"><?=get_option('ms_silver_description_title');?></h2>
@@ -832,10 +842,10 @@ function display_customer_points()
                             <span class="display_name"><?=wp_get_current_user()->display_name?></span><span class="card_number">1155 1854 7745</span>
                             <?=get_option('ms_silver_description_content');?>
                             <div class="card_points">
-                                <span class="points"><?=get_option('ms_silver_score', 10)?></span><span class="text">Points</span>
+                                <span class="points"><?=get_option('ms_silver_score')?></span><span class="text">Points</span>
                             </div>
                         </div>
-                        <div class="card <?php if($points >= get_option('ms_gold_score', 20) && $points < get_option('ms_platinum_score', 30)) { echo 'active'; } ?>" id="description-gold" style="left: 0%;">
+                        <div class="card <?php if($points >= get_option('ms_gold_score') && $points < get_option('ms_platinum_score')) { echo 'active'; } ?>" id="description-gold" style="left: 0%;">
                             <div class="card_header">
                                 <span class="card_logo"><?=get_option('ms_card_title');?></span>
                                 <h2 id="gold"><?=get_option('ms_gold_description_title');?></h2>
@@ -843,10 +853,10 @@ function display_customer_points()
                             <span class="display_name"><?=wp_get_current_user()->display_name?></span><span class="card_number">1155 1854 7745</span>
                             <?=get_option('ms_gold_description_content');?>
                             <div class="card_points">
-                                <span class="points"><?=get_option('ms_gold_score', 20)?></span><span class="text">Points</span>
+                                <span class="points"><?=get_option('ms_gold_score')?></span><span class="text">Points</span>
                             </div>
                         </div>
-                        <div class="card <?php if($points >= get_option('ms_platinum_score', 30)) { echo 'active'; } ?>" id="description-platinum" style="left: 0%;">
+                        <div class="card <?php if($points >= get_option('ms_platinum_score')) { echo 'active'; } ?>" id="description-platinum" style="left: 0%;">
                             <div class="card_header">
                                 <span class="card_logo"><?=get_option('ms_card_title');?></span>
                                 <h2 id="platinum"><?=get_option('ms_platinum_description_title');?></h2>
@@ -854,10 +864,10 @@ function display_customer_points()
                             <span class="display_name"><?=wp_get_current_user()->display_name?></span><span class="card_number">1155 1854 7745</span>
                             <?=get_option('ms_platinum_description_content');?>
                             <div class="card_points">
-                                <span class="points"><?=get_option('ms_platinum_score', 30)?></span><span class="text">Points</span>
+                                <span class="points"><?=get_option('ms_platinum_score')?></span><span class="text">Points</span>
                             </div>
                         </div>
-                        <div class="card <?php if($points >= get_option('ms_diamond_score', 40)) { echo 'active'; } ?>" id="description-diamond" style="left: 0%;">
+                        <div class="card <?php if($points >= get_option('ms_diamond_score')) { echo 'active'; } ?>" id="description-diamond" style="left: 0%;">
                             <div class="card_header">
                                 <span class="card_logo"><?=get_option('ms_card_title');?></span>
                                 <h2 id="diamond"><?=get_option('ms_diamond_description_title');?></h2>
@@ -865,7 +875,7 @@ function display_customer_points()
                             <span class="display_name"><?=wp_get_current_user()->display_name?></span><span class="card_number">1155 1854 7745</span>
                             <?=get_option('ms_diamond_description_content');?>
                             <div class="card_points">
-                                <span class="points"><?=get_option('ms_diamond_score', 40)?></span><span class="text">Points</span>
+                                <span class="points"><?=get_option('ms_diamond_score')?></span><span class="text">Points</span>
                             </div>
                         </div>
                     </div>
@@ -964,6 +974,7 @@ function apply_tier_discount_based_on_score($cart)
 
 // แลกคะแนนเป็นส่วนลด
 add_action('woocommerce_before_my_account', 'redeem_form_in_my_account');
+add_action('woocommerce_before_checkout_form', 'redeem_form_in_my_account');
 
 function redeem_form_in_my_account()
 {
@@ -987,7 +998,7 @@ function redeem_form_in_my_account()
                 <div class="card-body">
                     <div class="redeem-container" style="background:#fff; padding:25px; margin-bottom:30px;">
                         <p style="color:#666; font-size:14px;">Current Score: <strong id="current-user-score"
-                                style="color:#27ae60; font-size:18px;"><?php echo number_format($score); ?></strong> Points (1 Point = <?=number_format(get_option('membership_baht_per_point', 1));?> THB)
+                                style="color:#27ae60; font-size:18px;">(<?php echo number_format($score); ?></strong> Points 1 Point = 1 THB)
                         </p>
                         <div style="display:flex; gap:10px; margin-top:15px;">
                             <input type="number" id="redeem-amount" placeholder="Points to redeem" min="1" max="<?php echo $score; ?>"
@@ -1040,11 +1051,11 @@ function redeem_form_in_my_account()
             e.preventDefault();
             var amount = $('#redeem-amount').val();
             if (!amount || amount <= 0) {
-                alert('กรุณากรอกจำนวนคะแนนที่ถูกต้อง');
+                alert('Please enter currect numbers');
                 return;
             }
             var btn = $(this);
-            btn.text('กรุณารอสักครู่...').prop('disabled', true);
+            btn.text('Creating your coupon...').prop('disabled', true);
             $.ajax({
                 url: '<?php echo admin_url('admin-ajax.php'); ?>',
                 type: 'POST',
@@ -1268,7 +1279,7 @@ function member_display_custom_price_html($price_html, $product) {
             $price_html .= '<ins style="text-decoration:none;">' . wc_price($sale_price) . '</ins>';
         }
 
-        $price_html .= ' <span class="member-tag" style="font-size:12px; color:#27ae60; display:block; margin-top: 5px;">(ราคาสำหรับสมาชิก ' . ucfirst($level_name) . ')</span>';
+        $price_html .= ' <span class="member-tag" style="font-size:12px; color:#27ae60; display:block; margin-top: 5px;">(Member Privilege Price: ' . ucfirst($level_name) . ')</span>';
     }
 
     return $price_html;
