@@ -824,7 +824,7 @@ function display_customer_points()
             color: <?php echo $bar_color;?>;
         }
         #description-diamond {
-            background: <?php echo esc_attr(get_option('member-privileges-diamond-color')); ?>;
+            background: url('<?php echo esc_attr(get_option('member-privileges-diamond-color')); ?>');
             background-size: cover;
         }
         #description-platinum {

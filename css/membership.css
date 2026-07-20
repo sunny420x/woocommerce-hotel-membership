@@ -104,6 +104,7 @@
     transition: .2s ease-in-out;
     cursor: pointer;
     opacity: 0.2;
+    user-select: none;
 }
 
 .membership-description .card p {
