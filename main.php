@@ -845,7 +845,7 @@ function display_customer_points()
             <div class="rewards-container">
                 <div class="points-header">
                     <div>
-                        <span class="points-value" id="user_score"><?php echo number_format($points); ?></span> <small>Points <span style="color:#888;">(<?=number_format(get_option('membership_point_per_order', 1))?> Point per room)</span></small>
+                        <span class="points-value" id="user_score"><?php echo number_format($points); ?></span> <small>Points <span style="color:#888;">(<?=number_format(get_option('membership_point_per_order', 1))?> points per room)</span></small>
                     </div>
                     <div style="text-align: right; font-size: 14px; color: #aaa;"><?php
                             if($points < get_option('ms_silver_score')) echo "Need " . ((int) get_option('ms_silver_score') - $points) . " more points to reach Silver and receive a discount of 2% for your next stay";
