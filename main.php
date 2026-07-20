@@ -797,15 +797,19 @@ function display_customer_points()
         }
         #description-diamond {
             background: <?php echo esc_attr(get_option('member-privileges-diamond-color')); ?>;
+            background-size: cover;
         }
         #description-platinum {
-            background: <?php echo esc_attr(get_option('member-privileges-platinum-color')); ?>;
+            background: url('<?php echo esc_attr(get_option('member-privileges-platinum-color')); ?>');
+            background-size: cover;
         }
         #description-gold {
-            background: <?php echo esc_attr(get_option('member-privileges-gold-color')); ?>;
+            background: url('<?php echo esc_attr(get_option('member-privileges-gold-color')); ?>');
+            background-size: cover;
         }
         #description-silver {
-            background: <?php echo esc_attr(get_option('member-privileges-silver-color')); ?>;
+            background: url('<?php echo esc_attr(get_option('member-privileges-silver-color')); ?>');
+            background-size: cover;
         }
     </style>
     <div class="card">
