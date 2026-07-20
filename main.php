@@ -4,7 +4,7 @@
  * Description: ระบบสะสมคะแนน ส่วนลด สิทธิพิเศษ สำหรับสมาชิกเว็บไซต์
  * Author: Jirakit Pawnsakunrungrot
  * Author URI: https://www.linkedin.com/in/sunny-jirakit
- * Plugin URI: https://github.com/sunny420x/woocommerce-membership
+ * Plugin URI: https://github.com/sunny420x/woocommerce-membership-hotel
  */
 
 if (!defined('ABSPATH'))
@@ -16,11 +16,11 @@ function membership_menu()
 {
     add_menu_page(
         'Hotel Membership Settings', // Title ของหน้า
-        'ระบบ Hotel Membership', // ชื่อเมนูที่โชว์ในแถบข้าง
+        'Hotel Membership', // ชื่อเมนูที่โชว์ในแถบข้าง
         'manage_options', //สิทธิ์การเข้าถึง (Admin)
         'woocommerce-membership-settings', // Slug ของหน้า
         'woocommerce_membership_setting_page', // ฟังก์ชันที่ใช้พ่น HTML หน้า Setting
-        'dashicons-admin-users', // ไอคอน
+        'dashicons-star-filled', // ไอคอน
         '80' // ตำแหน่งเมนู
     );
 }
@@ -152,17 +152,17 @@ function woocommerce_membership_setting_page()
     <div class="white-label-zone no-print">
         <span style="padding: 40px 10px 40px 40px;float: left;font-size: 60px;">👑</span>
         <div style="padding: 20px 0;">
-            <h1>Hotel Membership</h1>
+            <h1>Sometime's Hotel Membership</h1>
             <p>ระบบสิทธิพิเศษ Hotel Membership สำหรับ WooCommerce บน WordPress ประกอบไปด้วย คะแนนและระดับของสมาชิก แลกคะแนนเป็นส่วนลด ส่วนลดสำหรับห้องพิเศษ
                 <br>
-                <strong>Github Repository:</strong> <a href="https://github.com/sunny420x/woocommerce-membership" target="_blank">https://github.com/sunny420x/woocommerce-membership</a>
+                <strong>Github Repository:</strong> <a href="https://github.com/sunny420x/woocommerce-membership-hotel" target="_blank">https://github.com/sunny420x/woocommerce-membership-hotel</a>
             </p>
         </div>
     </div>
     <div class="wrap">
         <div style="display: flex;">
             <div class="leftside">
-                <h1>WooCommerce Hotel Membership</h1>
+                <h1>Sometime's Hotel Membership</h1>
                 <a href="/wp-admin/admin.php?page=woocommerce-membership-settings&option=statistic" <?php if(isset($_GET['option']) && $_GET['option'] == "statistic") { echo "class='active'"; } ?>>📊 สถิติการใช้งาน</a>
                 <a href="/wp-admin/admin.php?page=woocommerce-membership-settings&option=member_privilege" <?php if(isset($_GET['option']) && $_GET['option'] == "member_privilege") { echo "class='active'"; } ?>>🏆 คะแนนและระดับของสมาชิก</a>
                 <a href="/wp-admin/admin.php?page=woocommerce-membership-settings&option=redeem_from_score" <?php if(isset($_GET['option']) && $_GET['option'] == "redeem_from_score") { echo "class='active'"; } ?>>🏷️ แลกคะแนนเป็นส่วนลด</a>
@@ -385,6 +385,32 @@ function woocommerce_membership_setting_page()
                 </form>
                 <?php
                 } elseif(isset($_GET['option']) && $_GET['option'] == "members") {
+                    if(isset($_GET['id']) && !empty($_GET['id'])) {
+                        global $wpdb;
+                        $id = sanitize_text_field($_GET['id']);
+                        
+                        if(isset($_POST['updateUserScore'])) {
+                            $score = sanitize_text_field( $_POST['score'] );
+
+                            $wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}users SET score = %d WHERE ID = %d", $score, $id));
+                            wp_redirect("admin.php?page=woocommerce-membership-settings&option=members&id=$id");
+                            exit();
+                        }
+
+                        $selected_user = $wpdb->get_row($wpdb->prepare("SELECT display_name,user_email,ID,score FROM {$wpdb->prefix}users WHERE id = %d", $id));
+                    ?>
+                    <h1><a class="button button-primary button-small" href="admin.php?page=woocommerce-membership-settings&option=members" style="margin-right: 10px;">X</a>จัดการคะแนนของ <?=$selected_user->display_name?></h1>
+                    <div style="padding: 25px 25px 25px 25px;">
+                        <form action="" method="post">
+                            <label for="score">คะแนน:</label><br>
+                            <input type="number" name="score" value="<?=$selected_user->score?>">
+                            <br>
+                            <br>
+                            <input type="submit" value="บันทึกการเปลี่ยนแปลง" name="updateUserScore" class="button button-outline-primary">
+                        </form>
+                    </div>
+                <?php
+                    }
                 ?>
                 <?php
                 function getMemberShipLevel($score)
@@ -412,6 +438,7 @@ function woocommerce_membership_setting_page()
                                 <th>อีเมล์ (Email)</th>
                                 <th>คะแนนปัจจุบัน (Score)</th>
                                 <th>ระดับสมาชิก</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -428,6 +455,7 @@ function woocommerce_membership_setting_page()
                                             target="_blank"><?= $row->user_email; ?></a></td>
                                     <td><?= $row->score; ?></td>
                                     <td><?= getMemberShipLevel($row->score); ?></td>
+                                    <td><a class="button button-outline-primary" href="admin.php?page=woocommerce-membership-settings&option=members&id=<?= $row->ID; ?>">จัดการ</a></td>
                                 </tr>
                                 <?php
                             }
